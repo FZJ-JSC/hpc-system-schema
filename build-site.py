@@ -90,6 +90,8 @@ def assemble(out: Path) -> None:
     desc_out = out / "descriptions"
     for src in sorted((REPO_ROOT / "descriptions").glob("system-*")):
         copy(src, desc_out / src.name)
+    # Copy the index.html listing page
+    copy(REPO_ROOT / "descriptions" / "index.html", desc_out / "index.html")
 
     # GitHub Pages marker (no Jekyll processing).
     (out / ".nojekyll").write_text("")

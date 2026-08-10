@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Example System Descriptions</title>
+<link rel="stylesheet" href="../schema_doc.css">
+<style>
+  :root { --accent: #0a4d8c; --bg: #f6f8fb; --text: #1c2733; --muted: #5b6b7b; --border: #d7e0ea; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; margin: 0; padding: 0; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 32px; }
+  h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.01em; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 24px; }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 18px; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 6px; transition: transform 0.06s ease, box-shadow 0.12s ease; }
+  .card:hover { border-color: var(--accent); box-shadow: 0 4px 14px rgba(10, 77, 140, 0.12); transform: translateY(-1px); }
+  .card h2 { font-size: 1.05rem; font-weight: 600; color: var(--accent); margin: 0; }
+  .card p { font-size: 0.92rem; color: var(--muted); margin: 0; }
+  .card .path { font-family: monospace; font-size: 0.78rem; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; padding: 2px 7px; align-self: flex-start; }
+  .back { display: inline-block; margin-bottom: 24px; color: var(--accent); text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="..">← Back to home</a>
+  <h1>Example System Descriptions</h1>
+  <p style="color: var(--muted); max-width: 60ch;">Ready-made system descriptions of real HPC machines. Click any card to view the JSON/YAML file.</p>
+  <div class="grid" id="list"></div>
+</div>
+<script>
+  const examples = [
+    {name: "JUPITER", file: "system-jupiter.json", desc: "Complete exascale system description"},
+    {name: "Frontier", file: "system-frontier.json", desc: "Full description with all components"},
+    {name: "Frontier (minimal)", file: "system-frontier-min.json", desc: "Minimal viable example"},
+    {name: "Aurora (minimal)", file: "system-aurora-minimal.json", desc: "Minimal example"},
+    {name: "El Capitan (minimal)", file: "system-elcapitan-minimal.json", desc: "Minimal example"},
+    {name: "LineShine (minimal)", file: "system-lineshine-minimal.json", desc: "Minimal example"},
+    {name: "MareNostrum 5 (minimal)", file: "system-marenostrum5-minimal.yaml", desc: "YAML format minimal example"}
+  ];
+  document.getElementById("list").innerHTML = examples.map(e => 
+    '<a class="card" href="' + e.file + '">' +
+    '<h2>' + e.name + '</h2>' +
+    '<p>' + e.desc + '</p>' +
+    '<span class="path">' + e.file + '</span>' +
+    '</a>'
+  ).join("");
+</script>
+</body>
+</html>
