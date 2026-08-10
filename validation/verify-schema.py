@@ -22,7 +22,7 @@ except ImportError:
 
 SCHEMA_PATH = os.environ.get(
     "SCHEMA_PATH",
-    os.path.join(os.path.dirname(__file__), os.pardir, "schemas", "system-definition-v1.json"),
+    os.path.join(os.path.dirname(__file__), os.pardir, "schema", "system-description-0.5.0.json"),
 )
 
 if "--help" in sys.argv or "-h" in sys.argv:

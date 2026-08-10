@@ -8,7 +8,7 @@ SHELL := /bin/bash
 MAKE_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 REPO_ROOT := $(abspath $(MAKE_DIR)/..)
 
-SCHEMA := $(REPO_ROOT)/schema/system-definition-v1.json
+SCHEMA := $(REPO_ROOT)/schema/system-description-0.5.0.json
 CONFIG := $(MAKE_DIR)/generate-docs.json
 OUTPUT := $(MAKE_DIR)/index.html
 

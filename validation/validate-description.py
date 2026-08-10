@@ -15,7 +15,7 @@ Usage:
 The JSON Schema path is resolved in this order of precedence:
     1. --schema CLI argument
     2. SCHEMA_PATH environment variable
-    3. Default: ../schemas/system-definition-v1.json (relative to this script)
+    3. Default: ../schema/system-description-0.5.0.json (relative to this script)
 
 Checks:
     schema     — JSON Schema structural validation (required, type, format, $ref)
@@ -341,7 +341,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
             "Schema resolution order:\n"
             "  1. --schema CLI argument\n"
             "  2. SCHEMA_PATH environment variable\n"
-            "  3. default: ../schemas/system-definition-v1.json (relative to this script)\n\n"
+            "  3. default: ../schema/system-description-0.5.0.json (relative to this script)\n\n"
             "Exit codes:\n"
             "  0  all selected checks pass\n"
             "  1  one or more checks fail\n"
@@ -351,7 +351,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         epilog=(
             "examples:\n"
             "  # run all checks (default)\n"
-            "  python validate.py samples/sample-system-jupiter.json\n"
+            "  python validate.py descriptions/system-jupiter.json\n"
             "\n"
             "  # pick a different schema (flag or environment variable)\n"
             "  python validate.py system.json --schema path/to/schema.json\n"
@@ -379,12 +379,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=os.environ.get(
             "SCHEMA_PATH",
             os.path.join(os.path.dirname(__file__), os.pardir,
-                         "schemas", "system-definition-v1.json"),
+                         "schema", "system-description-0.5.0.json"),
         ),
         help=(
             "Path to the JSON Schema file used for structural validation. "
             "Defaults to $SCHEMA_PATH if set, otherwise "
-            "../schemas/system-definition-v1.json (relative to this script)."
+            "../schema/system-description-0.5.0.json (relative to this script)."
         ),
     )
     p.add_argument(
