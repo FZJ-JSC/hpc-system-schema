@@ -1,5 +1,8 @@
 # HPC System Description Schema
 
+> [!TIP]
+> [🌐 **GitHub Pages site**](https://fzj-jsc.github.io/hpc-system-schema/) — browse the schema, use the browser-based editor, and view example system descriptions.
+
 A vendor-neutral [JSON Schema](https://json-schema.org/) (Draft-07) for describing HPC systems in a structured, machine-readable way. A system description covers the full machine: partitions, node types, CPUs, accelerators, memory, on-node and parallel storage, network interconnect, power and cooling, and the software stack.
 
 The current schema version is **0.5.0**; the canonical definition is [`schema/system-description-0.5.0.json`](schema/system-description-0.5.0.json), which carries a stable `$id`. Real systems described with it include the JUPITER exascale system (see [`descriptions/`](descriptions/)).
@@ -40,6 +43,25 @@ SCHEMA_PATH=schema/system-description-0.5.0.json \
 ## Schema documentation
 
 An HTML rendering of the schema is available at [`docs/index.html`](docs/index.html). It is generated with [json-schema-for-humans](https://github.com/coveooss/json-schema-for-humans); see [`docs/README.md`](docs/README.md) for details.
+
+## Website
+
+The repository is published as a GitHub Pages site with the schema, its
+documentation, the browser-based editor, and example descriptions. The landing
+page source is [`docs/index_landing.html`](docs/index_landing.html);
+[`build-site.py`](build-site.py) assembles the deployable site from the
+repository sources (renaming the landing page to `index.html` during the
+build):
+
+```bash
+python3 build-site.py                    # build into a fresh temp directory
+python3 build-site.py site-preview       # build into a named directory
+python3 -m http.server 8080 -d site-preview   # preview locally
+```
+
+Nothing is generated into the repository itself — the site is assembled in
+the runner workspace and deployed to GitHub Pages on every push to `main` via
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml).
 
 ## Sample applications
 

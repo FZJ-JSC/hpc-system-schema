@@ -1,2 +1,4 @@
 .copy-from-gitlab.sh
 .nojekyll
+/site/
+/site-preview/

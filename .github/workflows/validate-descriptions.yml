@@ -1,0 +1,67 @@
+name: Validate system descriptions
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'descriptions/**'
+      - 'schema/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Find changed descriptions
+        id: changed
+        run: |
+          FILES=$(git diff --name-only --diff-filter=ACM \
+            ${{ github.event.pull_request.base.sha }}...HEAD \
+            -- 'descriptions/*.json' 'descriptions/*.yaml' 'descriptions/*.yml' \
+            | sort)
+          if [ -z "$FILES" ]; then
+            echo "desc_files=" >> "$GITHUB_OUTPUT"
+            echo "No description files changed."
+          else
+            echo "desc_files<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$FILES" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+            echo "Changed descriptions:"
+            echo "$FILES"
+          fi
+
+          SCHEMA_CHANGED=$(git diff --name-only \
+            ${{ github.event.pull_request.base.sha }}...HEAD \
+            -- 'schema/*.json' | head -1)
+          if [ -n "$SCHEMA_CHANGED" ]; then
+            echo "schema_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Schema changed: $SCHEMA_CHANGED"
+          else
+            echo "schema_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Validate changed descriptions
+        if: steps.changed.outputs.desc_files != ''
+        run: |
+          FAIL=0
+          while IFS= read -r f; do
+            echo ""
+            echo "==========================================="
+            echo "  Validating: $f"
+            echo "==========================================="
+            if ! uv run --script validation/validate-description.py --no-color "$f"; then
+              FAIL=1
+            fi
+          done <<< "${{ steps.changed.outputs.desc_files }}"
+          exit $FAIL
+
+      - name: Validate schema
+        if: steps.changed.outputs.schema_changed == 'true'
+        run: uv run --script validation/verify-schema.py

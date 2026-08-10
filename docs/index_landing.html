@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HPC System Description Schema</title>
+<meta name="description" content="A vendor-neutral JSON Schema for describing HPC systems in a structured, machine-readable way.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a4d8c'/%3E%3Ctext x='16' y='22' font-size='16' font-family='monospace' fill='white' text-anchor='middle'%3E%7B%7D%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --accent: #0a4d8c;
+    --accent-soft: #e8f0f8;
+    --text: #1c2733;
+    --muted: #5b6b7b;
+    --border: #d7e0ea;
+    --card-bg: #ffffff;
+    --bg: #f6f8fb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 20px 32px; }
+  header { margin-bottom: 36px; }
+  .badge {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 12px;
+    margin-bottom: 14px;
+    text-transform: uppercase;
+  }
+  h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.01em; }
+  .tagline { margin-top: 8px; color: var(--muted); font-size: 1.02rem; max-width: 60ch; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 18px 16px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: transform 0.06s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  }
+  .card:hover { border-color: var(--accent); box-shadow: 0 4px 14px rgba(10, 77, 140, 0.12); transform: translateY(-1px); }
+  .card h2 { font-size: 1.05rem; font-weight: 600; color: var(--accent); }
+  .card p { font-size: 0.92rem; color: var(--muted); }
+  .card .path {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 2px 7px;
+    align-self: flex-start;
+  }
+  footer { margin-top: 40px; color: var(--muted); font-size: 0.85rem; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">Schema v0.5.0</span>
+    <h1>HPC System Description Schema</h1>
+    <p class="tagline">
+      A vendor-neutral JSON Schema (Draft-07) for describing HPC systems in a
+      structured, machine-readable way: partitions, node types, CPUs,
+      accelerators, memory, storage, network, and software stacks.
+    </p>
+  </header>
+
+  <main class="grid">
+    <a class="card" href="./schema/system-description-0.5.0.json">
+      <h2>Schema</h2>
+      <p>The canonical schema definition, served from its stable <code>$id</code> URL.</p>
+      <span class="path">./schema/system-description-0.5.0.json</span>
+    </a>
+    <a class="card" href="./docs/">
+      <h2>Documentation</h2>
+      <p>Browsable documentation of every definition, property and suggested value.</p>
+      <span class="path">./docs/</span>
+    </a>
+    <a class="card" href="./gui-generator/">
+      <h2>Editor</h2>
+      <p>A browser-based form editor for creating and editing system descriptions.</p>
+      <span class="path">./gui-generator/</span>
+    </a>
+    <a class="card" href="./descriptions/">
+      <h2>Examples</h2>
+      <p>Ready-made system descriptions of real machines, e.g. JUPITER and Frontier.</p>
+      <span class="path">./descriptions/</span>
+    </a>
+  </main>
+
+  <footer>
+    <p>MIT licensed &middot; <a href="https://github.com/fzj-jsc/hpc-system-schema">github.com/fzj-jsc/hpc-system-schema</a></p>
+  </footer>
+</div>
+</body>
+</html>
