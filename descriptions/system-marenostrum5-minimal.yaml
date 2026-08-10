@@ -1,0 +1,128 @@
+# This is a minimal example showing 2 partitions: GPP (standard) and ACC.
+# GPP-HighMem, GPP-Data, and GPP-HBM subtypes are omitted for brevity.
+schema_version: "0.5.0"
+version: "1.0.0"
+name: "MareNostrum 5"
+provider:
+  name: "Barcelona Supercomputing Center (BSC)"
+  location: "Barcelona, Spain"
+  website: "https://www.bsc.es"
+location: "Barcelona, Spain"
+installed_at: "2023-12-01T00:00:00Z"
+website: "https://www.bsc.es/supportkc/docs/MareNostrum5/intro/"
+comment: >-
+  MareNostrum 5 is a pre-exascale EuroHPC supercomputer supplied by Bull SAS, combining Lenovo ThinkSystem SD650 V3 (GPP) and Eviden BullSequana XH3000 (ACC)  architectures. 7,600 nodes total, ~389 TFLOPS HPL. Source: https://www.bsc.es/supportkc/docs/MareNostrum5/system-overview/
+parts:
+  - id: part-mn5-gpp
+    name: "MareNostrum 5 GPP"
+    provider: "Lenovo"
+    product_name: "ThinkSystem SD650 V3"
+    part_type: compute
+    node_count: 6480
+    comment: >-
+      6,480 GPP nodes (6,192 standard + 216 HighMem + 10 Data + 72 HBM).
+      This sample models only the standard 6,192 GPP nodes.
+      Source: https://www.bsc.es/supportkc/docs/MareNostrum5/system-overview/
+    physical_location:
+      site: "Barcelona Supercomputing Center (BSC)"
+    node_types:
+      - id: nd-mn5-gpp-standard
+        node_type_name: "standard compute node"
+        node_count: 6192
+        cpus:
+          - id: cpu-mn5-xeon-8480
+            manufacturer: "Intel"
+            name: "Xeon Platinum 8480+"
+            sku: "8480+"
+            architecture: "Sapphire Rapids"
+            isa: "x86-64"
+            cores_per_cpu: 56
+            threads_per_core: 2
+            number_of_sockets: 2
+            base_frequency:
+              quantity: 2.0
+              unit: "GHz"
+        memory:
+          - id: mem-mn5-ddr5
+            amount:
+              quantity: 256
+              unit: "GB"
+            type: "DDR5-4800"
+            comment: "16x DIMM 16GB 4800MHz DDR5 per node. Source: BSC"
+        on_node_storage:
+          - id: storage-mn5-nvme
+            name: "Local NVMe"
+            type: "NVMe"
+            amount_per_node:
+              quantity: 960
+              unit: "GB"
+            comment: "960GB NVMe local storage per node"
+        comment: >-
+          6,192 standard GPP nodes, each with 2x Intel Xeon Platinum 8480+
+          (56 cores each = 112 cores/node), 256 GB DDR5, 960 GB NVMe.
+          100 Gb/s InfiniBand per node (shared by 2 nodes, ConnectX-7 NDR200).
+
+  - id: part-mn5-acc
+    name: "MareNostrum 5 ACC"
+    provider: "Eviden (Bull SAS)"
+    product_name: "BullSequana XH3000"
+    part_type: compute
+    node_count: 1120
+    comment: >-
+      1,120 ACC nodes, each with 2x Intel Xeon Platinum 8460Y+ (40 cores each = 80 cores/node),
+      4x NVIDIA Hopper H100 (64 GB HBM2 each), 512 GB DDR5, 480 GB NVMe.
+      800 Gb/s InfiniBand per node (4x ConnectX-7 NDR200).
+      Source: https://www.bsc.es/supportkc/docs/MareNostrum5/system-overview/
+    physical_location:
+      site: "Barcelona Supercomputing Center (BSC)"
+    node_types:
+      - id: nd-mn5-acc-standard
+        node_type_name: "standard compute node"
+        node_count: 1120
+        cpus:
+          - id: cpu-mn5-xeon-8460y
+            manufacturer: "Intel"
+            name: "Xeon Platinum 8460Y+"
+            sku: "8460Y+"
+            architecture: "Sapphire Rapids"
+            isa: "x86-64"
+            cores_per_cpu: 40
+            threads_per_core: 2
+            number_of_sockets: 2
+            base_frequency:
+              quantity: 2.0
+              unit: "GHz"
+        memory:
+          - id: mem-mn5-acc-ddr5
+            amount:
+              quantity: 512
+              unit: "GB"
+            type: "DDR5-4800"
+            comment: "16x DIMM 32GB 4800MHz DDR5 per node"
+        accelerators:
+          - id: acc-mn5-h100
+            kind: "GPU"
+            manufacturer: "NVIDIA"
+            name: "H100"
+            sku: "H100 SXM"
+            architecture: "Hopper"
+            isa: "CUDA"
+            count_per_node: 4
+            memory:
+              id: mem-mn5-h100-hbm
+              amount:
+                quantity: 64
+                unit: "GB"
+              type: "HBM2"
+            comment: "4x NVIDIA Hopper H100, 64 GB HBM2 each = 256 GB GPU memory per node"
+        on_node_storage:
+          - id: storage-mn5-acc-nvme
+            name: "Local NVMe"
+            type: "NVMe"
+            amount_per_node:
+              quantity: 480
+              unit: "GB"
+            comment: "480GB NVMe local storage per node"
+        comment: >-
+          1,120 ACC nodes with 4x NVIDIA Hopper H100 GPUs each.
+          800 Gb/s InfiniBand per node (4x ConnectX-7 NDR200).

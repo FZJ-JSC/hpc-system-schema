@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HPC System Description Editor</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+    :root {
+        --bs-primary: #0d6efd;
+        --bs-bg: #f8f9fa;
+        --bs-card-bg: #ffffff;
+        --bs-border: #dee2e6;
+        --bs-text: #212529;
+    }
+    body { background-color: var(--bs-bg); color: var(--bs-text); }
+    .navbar { background: var(--bs-card-bg); box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+    .navbar-brand { font-weight: 700; }
+    .card { border-color: var(--bs-border); box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+
+    /* suggested value chips */
+    .suggest-wrap { margin-top: .3rem; }
+    .suggest-chip {
+        display: inline-block; margin: .1rem .15rem .1rem 0; padding: .1rem .55rem;
+        font-size: .75rem; border-radius: 999px; border: 1px solid #cfe2ff;
+        background: #e7f1ff; color: #084298; cursor: pointer; user-select: none;
+    }
+    .suggest-chip:hover { background: #cfe2ff; border-color: #9ec5fe; }
+    .suggest-chip i { font-size: .7rem; margin-right: .2rem; }
+
+    /* entity cards (parts, node types, cpus, ...) */
+    .entity-card { border: 1px solid var(--bs-border); border-radius: .5rem; margin-bottom: .75rem; background: #fff; }
+    .entity-card > .card-header { background: #eef3fa; }
+    .nested-card { border: 1px solid var(--bs-border); border-radius: .5rem; margin-bottom: .75rem; background: #fff; }
+    .nested-card > .card-header { background: #f7fafd; }
+    .item-card { border: 1px solid var(--bs-border); border-radius: .5rem; padding: .6rem .75rem; margin-bottom: .6rem; background: #fbfdff; }
+
+    .btn-add-optional { border-style: dashed; }
+    .field-label { font-weight: 600; font-size: .9rem; margin-bottom: .15rem; }
+    .required-star { color: #dc3545; margin-left: .15rem; }
+    .small-note { font-size: .75rem; color: #6c757d; }
+    .kv-row { display: grid; grid-template-columns: 1fr 1.3fr auto; gap: .4rem; align-items: start; margin-bottom: .5rem; }
+
+    /* collapsible headers */
+    .collapse-toggle {
+        cursor: pointer; user-select: none;
+    }
+    .collapse-toggle .bi { transition: transform .2s ease; }
+    .collapse-toggle[aria-expanded="false"] .bi { transform: rotate(-90deg); }
+    .collapse-toggle .bi-chevron-down { font-size: .85rem; }
+    .item-card-header { cursor: pointer; }
+    .item-card-header .entity-label::after { content: '\25BE'; margin-left: .4rem; font-size: .8rem; opacity: .5; }
+    .item-card-header[aria-expanded="false"] .entity-label::after { content: '\25B8'; }
+
+    .json-pre {
+        background: #1e1e2e; color: #e8e8e8; font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        padding: .9rem; border-radius: .5rem; max-height: 75vh; overflow: auto; white-space: pre; margin: 0;
+    }
+    .json-pre .key { color: #7dcfff; }
+    .json-pre .str { color: #a5e075; }
+    .json-pre .num { color: #f2cc60; }
+    .json-pre .bool { color: #c792ea; }
+
+    .sticky-sidebar { position: sticky; top: 1rem; }
+    .section-title { font-weight: 700; color: var(--bs-primary); }
+    .form-control, .form-select { font-size: .88rem; }
+    #json-size { font-variant-numeric: tabular-nums; }
+    .entity-label { font-size: .85rem; }
+</style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light mb-3">
+  <div class="container-fluid px-4">
+    <span class="navbar-brand"><i class="bi bi-server me-2 text-primary"></i>HPC System Description Editor</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge text-bg-light border" id="schema-badge"><i class="bi bi-cloud-arrow-down me-1"></i>Loading schema…</span>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-4">
+  <div class="row">
+    <!-- LEFT: controls + form -->
+    <div class="col-lg-8">
+      <div id="notices"></div>
+
+      <div class="card mb-3">
+        <div class="card-body py-2 d-flex flex-wrap align-items-center gap-2">
+          <span class="small-note me-1">Description:</span>
+          <button class="btn btn-sm btn-outline-primary" id="btn-new" type="button"><i class="bi bi-file-earmark-plus me-1"></i>New</button>
+          <button class="btn btn-sm btn-outline-primary" id="btn-load" type="button"><i class="bi bi-folder2-open me-1"></i>Load JSON…</button>
+          <button class="btn btn-sm btn-outline-secondary" id="btn-paste" type="button"><i class="bi bi-clipboard me-1"></i>Paste JSON</button>
+          <button class="btn btn-sm btn-outline-secondary" id="btn-example" type="button"><i class="bi bi-magic me-1"></i>Example (JUPITER)</button>
+          <span class="mx-1 border-start" style="height:1.2rem"></span>
+          <span class="badge text-bg-light border" id="validation-badge" title="">—</span>
+          <span class="ms-auto d-flex gap-2">
+            <button class="btn btn-sm btn-success" id="btn-copy" type="button"><i class="bi bi-clipboard-plus me-1"></i>Copy JSON</button>
+            <button class="btn btn-sm btn-success" id="btn-download" type="button"><i class="bi bi-download me-1"></i>Download</button>
+          </span>
+        </div>
+      </div>
+
+      <div id="empty-state" class="card mb-3">
+        <div class="card-body text-center py-5 text-muted">
+          <i class="bi bi-box-seam" style="font-size:3rem"></i>
+          <p class="mt-3 mb-4">No description open yet.</p>
+          <div>
+            <button class="btn btn-primary" id="btn-new-big" type="button"><i class="bi bi-file-earmark-plus me-1"></i>Start a new description</button>
+            <span class="mx-2">or</span>
+            <button class="btn btn-outline-primary" id="btn-load-big" type="button"><i class="bi bi-folder2-open me-1"></i>Load an existing one</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="form-area" class="d-none">
+        <ul class="nav nav-tabs" id="formTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#pane-basic" type="button">Basics</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-parts" type="button">Parts <span class="badge text-bg-light border" id="count-parts">0</span></button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#pane-software" type="button">Software stack</button>
+          </li>
+        </ul>
+        <div class="tab-content py-3">
+          <div class="tab-pane fade show active" id="pane-basic" role="tabpanel"></div>
+          <div class="tab-pane fade" id="pane-parts" role="tabpanel">
+            <div class="small-note mb-2"><i class="bi bi-info-circle me-1"></i>Parts are partitions/components. Each part can hold multiple node types, each with CPUs, memory, accelerators, storage, network…</div>
+          </div>
+          <div class="tab-pane fade" id="pane-software" role="tabpanel"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: JSON preview + info -->
+    <div class="col-lg-4">
+      <div class="sticky-sidebar">
+        <div class="card mb-3">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="section-title"><i class="bi bi-code-slash me-2"></i>JSON output</span>
+            <span class="badge text-bg-success" id="json-size">0 B</span>
+          </div>
+          <div class="card-body p-0">
+            <pre class="json-pre" id="json-preview"><span style="color:#6c757d">// No description yet — click “New” or load one.</span></pre>
+          </div>
+          <div class="card-footer bg-white d-flex gap-2">
+            <button class="btn btn-sm btn-success flex-fill" id="btn-copy2" type="button"><i class="bi bi-clipboard me-1"></i>Copy</button>
+            <button class="btn btn-sm btn-success flex-fill" id="btn-download2" type="button"><i class="bi bi-download me-1"></i>Download</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header section-title"><i class="bi bi-file-earmark-code me-2"></i>Schema information</div>
+          <div class="card-body small" id="schema-info"><span class="text-muted">Parsing schema…</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="file-input" accept=".json,application/json" class="d-none">
+<input type="file" id="file-input-schema" accept=".json,application/json" class="d-none">
+
+<!-- Paste modal -->
+<div class="modal fade" id="pasteModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="pasteModalTitle">Paste JSON</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted" id="pasteModalHint"></p>
+        <textarea class="form-control font-monospace" id="paste-text" rows="16" style="font-size:.8rem"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="paste-ok">Load into form</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   HPC System Description Editor
+   Parses system-description-0.5.0.json (fetched on load) and builds a
+   dynamic, nested form for creating/editing HPC system descriptions.
+   - arrays (parts, node_types, cpu, ...) get add/remove buttons
+   - x-suggested values are shown as clickable chips
+   - existing descriptions can be loaded (file / paste) and edited
+   - result can be copied or downloaded
+   ===================================================================== */
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+let SCHEMA = null;          // parsed schema
+let DATA = null;            // working copy of the description
+let SCHEMA_SOURCE = null;   // 'fetch' | 'file' | 'paste'
+let lastFilename = 'system-description.json';
+let pasteMode = 'system';
+let COLLAPSE_COUNTER = 0;
+
+const LABEL_KEYS = ['id', 'name', 'node_type_name', 'type', 'level_name', 'component', 'manufacturer'];
+
+/* ---------------- tiny utilities ---------------- */
+function makeEl(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+}
+function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function labelForKey(key) {
+    const ACRONYMS = {
+        id: 'ID', cpu: 'CPU', cpus: 'CPUs', sku: 'SKU', isa: 'ISA',
+        tdp: 'TDP', numa: 'NUMA', iops: 'IOPS', bios: 'BIOS',
+        bmc: 'BMC', dram: 'DRAM', hbm: 'HBM', ddr: 'DDR',
+        nvme: 'NVMe', pcie: 'PCIe', ib: 'IB', llc: 'LLC',
+        nic: 'NIC', gpu: 'GPU', gpus: 'GPUs', qpi: 'QPI',
+        upi: 'UPI', cpi: 'CPI', rdma: 'RDMA', pue: 'PUE',
+        cop: 'COP', mpi: 'MPI', blas: 'BLAS', cuda: 'CUDA',
+        rocm: 'ROCm', oneapi: 'oneAPI', cxl: 'CXL', ucx: 'UCX',
+        url: 'URL', uri: 'URI', json: 'JSON', uuid: 'UUID',
+        ipv4: 'IPv4', ipv6: 'IPv6', gb: 'GB', tb: 'TB', pb: 'PB',
+        mb: 'MB', kb: 'KB', ghz: 'GHz', mhz: 'MHz', tdp: 'TDP',
+        nvlink: 'NVLink',
+    };
+    const LOWERCASE = { to: 'to', of: 'of', per: 'per', on: 'on', and: 'and', in: 'in', or: 'or', for: 'for' };
+    return key.replace(/_/g, ' ').split(' ').map(w => {
+        const low = w.toLowerCase();
+        if (ACRONYMS[low]) return ACRONYMS[low];
+        if (LOWERCASE[low]) return LOWERCASE[low];
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }).join(' ');
+}
+function titleText(sub, key) {
+    return (sub && sub.title) ? sub.title : labelForKey(key);
+}
+function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
+function emptyVal(v) {
+    return v === undefined || v === null || v === '' ||
+        (Array.isArray(v) && v.length === 0) ||
+        (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0);
+}
+function slug(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'system-description';
+}
+function formatBytes(n) {
+    return n < 1024 ? n + ' B' : (n / 1024).toFixed(1) + ' KB';
+}
+function summarize(s) {
+    if (s && typeof s === 'object') {
+        return Object.entries(s).map(([k, v]) => k + ': ' + (v && typeof v === 'object' ? JSON.stringify(v) : v)).join(', ');
+    }
+    return String(s);
+}
+
+/* x-suggested may be an array OR a single value in this schema family */
+function getXSuggested(prop) {
+    const s = prop && prop['x-suggested'];
+    if (s === undefined || s === null) return [];
+    return Array.isArray(s) ? s : [s];
+}
+
+/* resolve a (possibly chained) $ref against #/definitions/... */
+function resolveProp(prop) {
+    if (!prop || typeof prop !== 'object') return prop;
+    if (!prop.$ref) return prop;
+    const ref = prop.$ref;
+    if (ref.startsWith('#/definitions/')) {
+        let node = SCHEMA.definitions;
+        for (const seg of ref.replace('#/definitions/', '').split('/')) {
+            node = node && node[seg];
+        }
+        if (node) {
+            while (node && node.$ref) node = resolveProp(node);
+            return node;
+        }
+    }
+    return prop; // unresolvable -> render as-is
+}
+
+/* ---------------- data path helpers ---------------- */
+function getAt(path) {
+    let d = DATA;
+    for (const k of path) { if (d === Object(d)) d = d[k]; else return undefined; }
+    return d;
+}
+function ensureParents(path) {
+    let node = DATA;
+    for (let i = 0; i < path.length - 1; i++) {
+        const k = path[i];
+        const nextIsNum = /^\d+$/.test(String(path[i + 1]));
+        if (node[k] === undefined || node[k] === null) node[k] = nextIsNum ? [] : {};
+        node = node[k];
+    }
+    return node;
+}
+function deleteKeyAt(path) {
+    const parent = path.length === 1 ? DATA : getAt(path.slice(0, -1));
+    if (parent && typeof parent === 'object') {
+        if (Array.isArray(parent)) parent.splice(Number(path[path.length - 1]), 1);
+        else if (Object.prototype.hasOwnProperty.call(parent, path[path.length - 1])) delete parent[path[path.length - 1]];
+    }
+}
+function setAt(path, value) {
+    ensureParents(path);
+    const parent = path.length === 1 ? DATA : getAt(path.slice(0, -1));
+    if (parent && typeof parent === 'object') parent[path[path.length - 1]] = value;
+}
+function writeValue(path, raw, type) {
+    const last = path[path.length - 1];
+    const parent = path.length === 1 ? DATA : ensureParents(path);
+    if (parent === null || typeof parent !== 'object') return;
+    if (raw === '' || raw === null || raw === undefined) {
+        if (Array.isArray(parent)) return; // array slots handled by add/remove only
+        if (Object.prototype.hasOwnProperty.call(parent, last)) delete parent[last];
+    } else if (type === 'number' || type === 'integer') {
+        const v = Number(raw);
+        if (!isNaN(v)) parent[last] = v;
+    } else if (type === 'boolean') {
+        parent[last] = !!raw;
+    } else {
+        parent[last] = raw;
+    }
+    pruneEmpty();
+}
+/* remove only empty-string / null leaves; keep empty objects & arrays (user may fill them) */
+function pruneEmpty() {
+    function walk(node) {
+        if (Array.isArray(node)) { node.forEach(walk); return; }
+        if (node && typeof node === 'object') {
+            for (const k of Object.keys(node)) {
+                const v = node[k];
+                if (v === '' || v === null || v === undefined) delete node[k];
+                else if (typeof v === 'object') walk(v);
+            }
+        }
+    }
+    walk(DATA);
+}
+
+/* RFC 3339 <-> <input type="datetime-local"> */
+function toLocalInput(rfc) {
+    if (!rfc) return '';
+    const m = String(rfc).match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::(\d{2}))?/);
+    if (!m) return '';
+    return m[3] ? m[1] + 'T' + m[2] + ':' + m[3] : m[1] + 'T' + m[2];
+}
+function toRfc3339(local) {
+    if (!local) return '';
+    const m = String(local).replace('T', ' ').match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})(?::(\d{2}))?/);
+    if (!m) return '';
+    return m[1] + 'T' + m[2] + ':' + (m[3] || '00') + 'Z';
+}
+
+/* ---------------- chips ---------------- */
+function chipAdd(label, onClick) {
+    const b = makeEl('span', 'suggest-chip');
+    b.innerHTML = '<i class="bi bi-plus-circle"></i>';
+    b.appendChild(document.createTextNode(' ' + label));
+    b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); if (onClick) onClick(); });
+    return b;
+}
+function suggestionChips(prop, onClick) {
+    const wrap = makeEl('div', 'suggest-wrap');
+    for (const s of getXSuggested(prop)) {
+        wrap.appendChild(chipAdd(stringPreview(summarize(s)), () => onClick(s)));
+    }
+    return wrap.children.length ? wrap : null;
+}
+function stringPreview(s) { return s.length > 48 ? s.slice(0, 45) + '…' : s; }
+
+/* ---------------- notices ---------------- */
+function notice(msg, type, duration) {
+    const div = makeEl('div', 'alert alert-' + (type || 'info') + ' alert-dismissible fade show py-2');
+    div.innerHTML = '<span>' + esc(msg) + '</span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+    $('#notices').prepend(div);
+    while ($('#notices').children.length > 4) $('#notices').lastChild.remove();
+    if (duration) setTimeout(() => { div.classList.remove('show'); setTimeout(() => div.remove(), 300); }, duration);
+}
+
+/* =====================================================================
+   RENDERING
+   ===================================================================== */
+function renderField(sub, value, path, required, key, ctx) {
+    sub = resolveProp(sub);
+    const wrap = makeEl('div', 'mb-3');
+    const k = key !== undefined ? key : path[path.length - 1];
+    if (!sub || typeof sub !== 'object') { wrap.appendChild(makeEl('div', 'small-note', '(unsupported schema node)')); return wrap; }
+
+    if (sub.type === 'object') {
+        if (sub.properties) {
+            const isQty = isQuantityLike(sub);
+            if ((value === undefined || value === null) && !required) {
+                wrap.appendChild(optionalAddButton(k, sub, path, ctx));
+                return wrap;
+            }
+            wrap.appendChild(isQty
+                ? renderQuantityInline(sub, value, path, required, k, ctx)
+                : renderObjectCard(sub, value, path, required, k, ctx));
+            return wrap;
+        }
+        // free-form object (additionalProperties only)
+        if ((value === undefined || value === null) && !required) {
+            wrap.appendChild(optionalAddButton(k, sub, path, ctx));
+            return wrap;
+        }
+        wrap.appendChild(renderKV(sub, value, path, required, k, ctx));
+        return wrap;
+    }
+    if (sub.type === 'array') {
+        const minReq = (sub.minItems || 0) >= 1 || required;
+        if ((value === undefined || value === null) && !minReq) {
+            wrap.appendChild(optionalAddButton(k, sub, path, ctx));
+            return wrap;
+        }
+        wrap.appendChild(renderArrayCard(sub, value || [], path, minReq, k, ctx));
+        return wrap;
+    }
+    if (sub.enum) { wrap.appendChild(renderEnumField(sub, value, path, required)); return wrap; }
+    if (sub.type === 'string') { wrap.appendChild(renderStringField(sub, value, path, required)); return wrap; }
+    if (sub.type === 'number' || sub.type === 'integer') { wrap.appendChild(renderNumberField(sub, value, path, required)); return wrap; }
+    if (sub.type === 'boolean') { wrap.appendChild(renderBooleanField(sub, value, path)); return wrap; }
+    wrap.appendChild(makeEl('div', 'small-note', '(unsupported type: ' + (sub.type || '?') + ')'));
+    return wrap;
+}
+function isQuantityLike(sub) {
+    if (!sub.properties) return false;
+    const keys = Object.keys(sub.properties).filter(k => k !== 'comment');
+    return keys.length === 2 && keys.includes('quantity') && keys.includes('unit');
+}
+
+/* rebuild the content of a container (card body / pane) from schema + data */
+function buildBodyContent(bodyEl, sub, dataNode, path, onlyKeys, ctx) {
+    const props = sub.properties || {};
+    for (const pk of Object.keys(props)) {
+        if (onlyKeys && !onlyKeys.includes(pk)) continue;
+        const psub = resolveProp(props[pk]);
+        const val = dataNode ? dataNode[pk] : undefined;
+        const preq = (sub.required || []).includes(pk);
+        bodyEl.appendChild(renderField(psub, val, path.concat([pk]), preq, pk, ctx));
+    }
+}
+function rerenderBody(ctx) {
+    if (!ctx || !ctx.bodyEl) { renderRoot(); return; }
+    ctx.bodyEl.textContent = '';
+    buildBodyContent(ctx.bodyEl, ctx.sub, getAt(ctx.path) || {}, ctx.path, ctx.keys || null, ctx);
+    refresh();
+}
+
+/* dashed "add optional <field>" button */
+function optionalAddButton(k, sub, path, ctx) {
+    const b = makeEl('button', 'btn btn-sm btn-outline-primary btn-add-optional');
+    b.type = 'button';
+    b.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Add ' + labelForKey(k);
+    b.addEventListener('click', () => {
+        setAt(path, sub.type === 'array' ? [] : {});
+        rerenderBody(ctx);
+    });
+    return b;
+}
+
+/* ---------------- object card ---------------- */
+function renderObjectCard(sub, value, path, required, key, ctx) {
+    const card = makeEl('div', 'nested-card');
+    const header = makeEl('div', 'card-header d-flex justify-content-between align-items-center');
+    const title = makeEl('span', 'field-label mb-0');
+    title.textContent = titleText(sub, key);
+    if (required) title.appendChild(makeEl('span', 'required-star', '*'));
+    header.appendChild(title);
+
+    const tools = makeEl('div', 'd-flex gap-1 align-items-center');
+    const suggChips = suggestionChips(sub, s => { setAt(path, deepCopy(s)); rerenderBody(ctx); });
+    if (suggChips) tools.appendChild(suggChips);
+
+    const cid = 'obj-' + (++COLLAPSE_COUNTER);
+    const tog = makeEl('button', 'btn btn-sm collapse-toggle');
+    tog.type = 'button';
+    tog.innerHTML = '<i class="bi bi-chevron-down"></i>';
+    tools.appendChild(tog);
+
+    if (!required) {
+        const rm = makeEl('button', 'btn btn-sm btn-outline-danger');
+        rm.type = 'button';
+        rm.title = 'Remove this block';
+        rm.innerHTML = '<i class="bi bi-x-lg"></i>';
+        rm.addEventListener('click', () => { deleteKeyAt(path); rerenderBody(ctx); });
+        tools.appendChild(rm);
+    }
+    header.appendChild(tools);
+    card.appendChild(header);
+
+    const coll = makeEl('div', 'collapse show');
+    coll.id = cid;
+    tog.addEventListener('click', () => {
+        const isShown = coll.classList.contains('show');
+        coll.classList.toggle('show');
+        tog.setAttribute('aria-expanded', isShown ? 'false' : 'true');
+    });
+    const body = makeEl('div', 'card-body');
+    coll.appendChild(body);
+    card.appendChild(coll);
+
+    if (sub.description) body.appendChild(makeEl('div', 'small-note mb-2', sub.description));
+    buildBodyContent(body, sub, value || {}, path, null, { bodyEl: body, sub: sub, path: path, keys: null });
+    return card;
+}
+
+/* ---------------- quantity+unit inline ---------------- */
+function renderQuantityInline(sub, value, path, required, key, ctx) {
+    const wrap = makeEl('div');
+    const label = makeEl('label', 'field-label');
+    label.textContent = titleText(sub, key);
+    if (required) label.appendChild(makeEl('span', 'required-star', '*'));
+    wrap.appendChild(label);
+    if (sub.description) wrap.appendChild(makeEl('div', 'small-note', sub.description));
+
+    const row = makeEl('div', 'd-flex gap-2 align-items-start flex-wrap');
+    const qty = document.createElement('input');
+    qty.type = 'number'; qty.step = 'any';
+    qty.className = 'form-control form-control-sm'; qty.style.maxWidth = '150px';
+    qty.placeholder = 'quantity';
+    qty.value = (value && value.quantity !== undefined && value.quantity !== null) ? value.quantity : '';
+    qty.addEventListener('input', () => { writeValue(path.concat(['quantity']), qty.value, 'number'); refresh(); });
+
+    const unit = document.createElement('input');
+    unit.type = 'text';
+    unit.className = 'form-control form-control-sm'; unit.style.maxWidth = '120px';
+    unit.placeholder = 'unit';
+    unit.value = (value && value.unit !== undefined && value.unit !== null) ? value.unit : '';
+    unit.addEventListener('input', () => { writeValue(path.concat(['unit']), unit.value, 'string'); refresh(); });
+
+    row.appendChild(qty);
+    row.appendChild(unit);
+    if (!required) {
+        const rm = makeEl('button', 'btn btn-sm btn-outline-danger');
+        rm.type = 'button'; rm.title = 'Remove';
+        rm.innerHTML = '<i class="bi bi-x-lg"></i>';
+        rm.addEventListener('click', () => { deleteKeyAt(path); rerenderBody(ctx); });
+        row.appendChild(rm);
+    }
+    wrap.appendChild(row);
+
+    const chips = suggestionChips(sub, s => { setAt(path, deepCopy(s)); rerenderBody(ctx); });
+    if (chips) wrap.appendChild(chips);
+
+    // optional comment field
+    if (sub.properties && sub.properties.comment) {
+        const c = document.createElement('input');
+        c.type = 'text'; c.className = 'form-control form-control-sm mt-2'; c.style.maxWidth = '320px';
+        c.placeholder = 'comment (optional)';
+        c.value = (value && value.comment !== undefined && value.comment !== null) ? value.comment : '';
+        c.addEventListener('input', () => { writeValue(path.concat(['comment']), c.value, 'string'); refresh(); });
+        wrap.appendChild(c);
+    }
+    return wrap;
+}
+
+/* ---------------- free-form KV editor ---------------- */
+function renderKV(sub, value, path, required, key, ctx) {
+    const wrap = makeEl('div');
+    const label = makeEl('label', 'field-label');
+    label.textContent = titleText(sub, key);
+    if (required) label.appendChild(makeEl('span', 'required-star', '*'));
+    wrap.appendChild(label);
+    if (sub.description) wrap.appendChild(makeEl('div', 'small-note', sub.description));
+
+    const card = makeEl('div', 'item-card');
+    const body = makeEl('div');
+    card.appendChild(body);
+    wrap.appendChild(card);
+
+    const valType = (sub.additionalProperties && typeof sub.additionalProperties === 'object' && sub.additionalProperties.type) || 'string';
+
+    function rows() {
+        body.textContent = '';
+        const map = value && typeof value === 'object' ? value : {};
+        const keys = Object.keys(map);
+        if (!keys.length) body.appendChild(makeEl('div', 'small-note text-muted mb-2', 'No key/value pairs yet.'));
+
+        for (const k of keys) {
+            const rowEl = makeEl('div', 'kv-row');
+            const kIn = document.createElement('input');
+            kIn.type = 'text'; kIn.className = 'form-control form-control-sm';
+            kIn.value = k;
+            kIn.title = 'Key';
+            kIn.addEventListener('change', () => { rebuildFromRows(); });
+
+            const vIn = document.createElement('input');
+            vIn.type = valType === 'number' ? 'number' : 'text';
+            vIn.className = 'form-control form-control-sm';
+            vIn.title = 'Value';
+            const cur = map[k];
+            vIn.value = (cur === null || cur === undefined) ? '' : (typeof cur === 'object' ? JSON.stringify(cur) : String(cur));
+            vIn.addEventListener('input', () => {
+                const nk = kIn.value.trim();
+                if (!nk) return;
+                map[nk] = coerceKV(vIn.value, valType);
+                if (nk !== k && Object.prototype.hasOwnProperty.call(map, k)) delete map[k];
+                refresh();
+            });
+
+            const del = makeEl('button', 'btn btn-sm btn-outline-danger');
+            del.type = 'button'; del.title = 'Remove';
+            del.innerHTML = '<i class="bi bi-x-lg"></i>';
+            del.addEventListener('click', () => {
+                if (Object.prototype.hasOwnProperty.call(map, kIn.value)) delete map[kIn.value];
+                rows(); refresh();
+            });
+
+            rowEl.appendChild(kIn); rowEl.appendChild(vIn); rowEl.appendChild(del);
+            body.appendChild(rowEl);
+        }
+
+        const addRow = makeEl('button', 'btn btn-sm btn-outline-primary btn-add-optional mt-1');
+        addRow.type = 'button';
+        addRow.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Add key/value';
+        addRow.addEventListener('click', () => {
+            if (!value || typeof value !== 'object') { setAt(path, {}); value = getAt(path); }
+            const n = Object.keys(value).length + 1;
+            value['key' + n] = '';
+            rows(); refresh();
+        });
+        body.appendChild(addRow);
+
+        const chips = suggestionChips(sub, s => { setAt(path, deepCopy(s)); value = getAt(path); rows(); refresh(); });
+        if (chips) wrap.appendChild(chips);
+    }
+    function rebuildFromRows() {
+        if (!value || typeof value !== 'object') { setAt(path, {}); value = getAt(path); }
+        const entry = {};
+        body.querySelectorAll('.kv-row').forEach(r => {
+            const k = r.children[0].value.trim();
+            if (!k) return;
+            entry[k] = coerceKV(r.children[1].value, valType);
+        });
+        Object.keys(value).forEach(k => delete value[k]);
+        Object.assign(value, entry);
+        rows(); refresh();
+    }
+    function coerceKV(v, t) {
+        if (t === 'number') { const n = Number(v); return isNaN(n) ? v : n; }
+        if (t === 'boolean') return v === 'true' || v === true;
+        return v;
+    }
+    rows();
+    return wrap;
+}
+
+/* ---------------- arrays ---------------- */
+function renderArrayCard(sub, arr, path, minReq, key, ctx) {
+    const itemSub = resolveProp(sub.items);
+    const card = makeEl('div', 'entity-card');
+    const header = makeEl('div', 'card-header d-flex justify-content-between align-items-center');
+    const title = makeEl('span', 'field-label mb-0');
+    title.textContent = titleText(sub, key);
+    if (minReq) title.appendChild(makeEl('span', 'required-star', '*'));
+    header.appendChild(title);
+
+    const tools = makeEl('div', 'd-flex gap-2 align-items-center');
+    const cnt = makeEl('span', 'badge text-bg-light border', String(arr.length));
+    tools.appendChild(cnt);
+    const add = makeEl('button', 'btn btn-sm btn-primary');
+    add.type = 'button';
+    add.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add ' + labelForKey(key === 'parts' ? 'part' : (itemSub.title || 'item')).toLowerCase();
+    add.addEventListener('click', () => {
+        ensureParents(path);
+        let arr = getAt(path);
+        if (!Array.isArray(arr)) {
+            // create the array on the parent
+            const parent = path.length > 1 ? getAt(path.slice(0, -1)) : DATA;
+            if (parent && typeof parent === 'object') parent[path[path.length - 1]] = [defaultForSchema(itemSub)];
+        } else {
+            arr.push(defaultForSchema(itemSub));
+        }
+        rerenderBody(ctx);
+    });
+    tools.appendChild(add);
+
+    // collapse toggle — manual (no Bootstrap data-bs-toggle to avoid conflicts)
+    const acId = 'arr-' + (++COLLAPSE_COUNTER);
+    const tog = makeEl('button', 'btn btn-sm collapse-toggle');
+    tog.type = 'button';
+    tog.innerHTML = '<i class="bi bi-chevron-down"></i>';
+    tools.appendChild(tog);
+
+    header.appendChild(tools);
+    card.appendChild(header);
+
+    const coll = makeEl('div', 'collapse show');
+    coll.id = acId;
+    tog.addEventListener('click', () => {
+        const isShown = coll.classList.contains('show');
+        coll.classList.toggle('show');
+        tog.setAttribute('aria-expanded', isShown ? 'false' : 'true');
+    });
+    const body = makeEl('div', 'card-body');
+    coll.appendChild(body);
+    card.appendChild(coll);
+
+    if ((sub.minItems || 0) > arr.length) {
+        body.appendChild(makeEl('div', 'alert alert-warning py-1 px-2 small mb-2',
+            'At least ' + sub.minItems + ' required (currently ' + arr.length + ').'));
+    }
+    if (arr.length === 0) {
+        body.appendChild(makeEl('div', 'small-note text-muted mb-2', 'No items yet — click Add.'));
+    }
+    arr.forEach((item, i) => body.appendChild(renderArrayItem(itemSub, item, path.concat([String(i)]), i, sub, ctx)));
+    return card;
+}
+function defaultForSchema(sub) {
+    const o = {};
+    for (const [k, ps] of Object.entries(sub.properties || {})) {
+        const p = resolveProp(ps);
+        if (p && p.default !== undefined) o[k] = p.default;
+    }
+    return o;
+}
+function renderArrayItem(itemSub, item, itemPath, idx, arrSub, ctx) {
+    const isObj = itemSub.type === 'object';
+    const typeLabel = (itemSub.title || labelForKey(String(itemPath[itemPath.length - 2]))).replace(/ design specification$/i, '');
+    const card = makeEl('div', 'item-card');
+
+    // collapse toggle for object items
+    const icId = 'item-' + (++COLLAPSE_COUNTER);
+    const head = makeEl('div', 'd-flex justify-content-between align-items-center item-card-header mb-1');
+    head.setAttribute('role', 'button');
+    head.setAttribute('aria-expanded', 'true');
+
+    const title = makeEl('span', 'entity-label fw-semibold');
+    title.textContent = typeLabel + ' ' + (idx + 1) + itemLabel(item, typeLabel);
+    head.appendChild(title);
+
+    const headTools = makeEl('div', 'd-flex gap-1 align-items-center');
+    const minItems = arrSub.minItems || 0;
+    const rm = makeEl('button', 'btn btn-sm btn-outline-danger');
+    rm.type = 'button';
+    rm.innerHTML = '<i class="bi bi-trash"></i>';
+    if (minItems >= 1) { rm.disabled = true; rm.title = 'At least ' + minItems + ' required'; }
+    else rm.title = 'Remove';
+    rm.addEventListener('click', e => {
+        e.stopPropagation();
+        const parent = getAt(itemPath.slice(0, -1));
+        if (Array.isArray(parent)) {
+            parent.splice(idx, 1);
+            if (parent.length === 0 && (arrSub.minItems || 0) === 0) deleteKeyAt(itemPath.slice(0, -1));
+        }
+        rerenderBody(ctx);
+    });
+    headTools.appendChild(rm);
+    head.appendChild(headTools);
+    card.appendChild(head);
+
+    // wrap body in collapse — manual toggle (no data-bs-toggle to avoid Bootstrap conflicts)
+    const coll = makeEl('div', 'collapse show');
+    coll.id = icId;
+    head.addEventListener('click', () => {
+        const isShown = coll.classList.contains('show');
+        coll.classList.toggle('show');
+        head.setAttribute('aria-expanded', isShown ? 'false' : 'true');
+    });
+    card.appendChild(coll);
+
+    if (isObj) {
+        const body = makeEl('div');
+        coll.appendChild(body);
+        buildBodyContent(body, itemSub, item || {}, itemPath, null, { bodyEl: body, sub: itemSub, path: itemPath, keys: null });
+        // keep the header label in sync with id/name fields
+        body.addEventListener('input', e => {
+            const p = e.target && e.target.dataset ? e.target.dataset.path : null;
+            if (!p) return;
+            const seg = JSON.parse(p);
+            if (LABEL_KEYS.includes(seg[seg.length - 1])) {
+                title.textContent = typeLabel + ' ' + (idx + 1) + itemLabel(getAt(itemPath), typeLabel);
+            }
+        });
+    } else {
+        // primitive array item (string / number): no collapse, just a single input
+        const body = makeEl('div');
+        coll.appendChild(body);
+        const inp = document.createElement('input');
+        inp.type = itemSub.type === 'number' || itemSub.type === 'integer' ? 'number' : 'text';
+        inp.className = 'form-control form-control-sm';
+        inp.value = (item === undefined || item === null) ? '' : String(item);
+        inp.addEventListener('input', () => {
+            const parent = getAt(itemPath.slice(0, -1));
+            if (!Array.isArray(parent)) return;
+            if (inp.value === '') { parent.splice(idx, 1); rerenderBody(ctx); return; }
+            parent[idx] = (itemSub.type === 'number' || itemSub.type === 'integer') ? Number(inp.value) : inp.value;
+            refresh();
+        });
+        body.appendChild(inp);
+    }
+    return card;
+}
+function itemLabel(value, typeLabel) {
+    if (!value || typeof value !== 'object') return '';
+    for (const k of LABEL_KEYS) {
+        if (value[k] !== undefined && value[k] !== null && value[k] !== '') return ' · ' + value[k];
+    }
+    return '';
+}
+
+/* ---------------- primitive fields ---------------- */
+function fieldLabel(wrap, sub, key, required) {
+    const label = makeEl('label', 'field-label');
+    label.textContent = titleText(sub, key);
+    if (required) label.appendChild(makeEl('span', 'required-star', '*'));
+    wrap.appendChild(label);
+    if (sub.description) wrap.appendChild(makeEl('div', 'small-note', sub.description));
+    return label;
+}
+function renderStringField(sub, value, path, required) {
+    const wrap = makeEl('div');
+    fieldLabel(wrap, sub, path[path.length - 1], required);
+
+    const isDate = sub.format === 'date-time';
+    const isUrl = sub.format === 'uri' || sub.format === 'url';
+    const input = document.createElement('input');
+    input.type = isDate ? 'datetime-local' : (isUrl ? 'url' : 'text');
+    input.className = 'form-control form-control-sm';
+    input.dataset.path = JSON.stringify(path);
+    if (sub.pattern) { input.pattern = sub.pattern; input.title = 'pattern: ' + sub.pattern; }
+    input.value = isDate ? toLocalInput(value) : (value === undefined || value === null ? '' : String(value));
+    input.addEventListener('input', () => {
+        writeValue(path, isDate ? toRfc3339(input.value) : input.value, 'string');
+        refresh();
+    });
+    wrap.appendChild(input);
+    if (isDate) wrap.appendChild(makeEl('div', 'small-note', 'RFC 3339 (UTC) — e.g. 2024-06-01T00:00:00Z. The value you type is treated as UTC.'));
+
+    if (!isDate) {
+        const chips = suggestionChips(sub, s => {
+            input.value = String(s);
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        if (chips) wrap.appendChild(chips);
+    }
+    return wrap;
+}
+function renderNumberField(sub, value, path, required) {
+    const wrap = makeEl('div');
+    fieldLabel(wrap, sub, path[path.length - 1], required);
+
+    const isInt = sub.type === 'integer';
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'form-control form-control-sm';
+    input.step = isInt ? '1' : 'any';
+    input.dataset.path = JSON.stringify(path);
+    if (sub.minimum !== undefined) input.min = sub.minimum;
+    if (sub.maximum !== undefined) input.max = sub.maximum;
+    input.value = (value === undefined || value === null) ? '' : String(value);
+    input.addEventListener('input', () => { writeValue(path, input.value, sub.type); refresh(); });
+    wrap.appendChild(input);
+    if (sub.minimum !== undefined) wrap.appendChild(makeEl('div', 'small-note', 'Minimum: ' + sub.minimum));
+
+    const chips = suggestionChips(sub, s => {
+        input.value = String(s);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    if (chips) wrap.appendChild(chips);
+    return wrap;
+}
+function renderEnumField(sub, value, path, required) {
+    const wrap = makeEl('div');
+    fieldLabel(wrap, sub, path[path.length - 1], required);
+    const sel = document.createElement('select');
+    sel.className = 'form-select form-select-sm';
+    sel.dataset.path = JSON.stringify(path);
+    const empty = makeEl('option', '', required ? '— select —' : '— none —');
+    empty.value = '';
+    sel.appendChild(empty);
+    for (const opt of sub.enum) {
+        const o = makeEl('option', '', String(opt));
+        o.value = opt;
+        sel.appendChild(o);
+    }
+    sel.value = sub.enum.includes(value) ? value : '';
+    sel.addEventListener('change', () => { writeValue(path, sel.value, 'string'); refresh(); });
+    wrap.appendChild(sel);
+    return wrap;
+}
+function renderBooleanField(sub, value, path) {
+    const wrap = makeEl('div');
+    const sw = makeEl('div', 'form-check form-switch');
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.className = 'form-check-input';
+    input.dataset.path = JSON.stringify(path);
+    input.checked = !!value;
+    input.addEventListener('change', () => { writeValue(path, input.checked, 'boolean'); refresh(); });
+    const lab = makeEl('label', 'form-check-label small', titleText(sub, path[path.length - 1]));
+    sw.appendChild(input); sw.appendChild(lab);
+    wrap.appendChild(sw);
+    if (sub.description) wrap.appendChild(makeEl('div', 'small-note', sub.description));
+    return wrap;
+}
+
+/* =====================================================================
+   VALIDATION / PREVIEW / ACTIONS
+   ===================================================================== */
+function collectMissing(sub, value, path, out) {
+    sub = resolveProp(sub);
+    if (!sub || typeof sub !== 'object') return;
+    if (sub.type === 'object') {
+        if (value === undefined || value === null) return; // optional object absent
+        for (const r of sub.required || []) {
+            if (emptyVal(value[r])) out.push(path.concat([r]).join('.'));
+        }
+        for (const pk of Object.keys(sub.properties || {})) {
+            collectMissing(resolveProp(sub.properties[pk]), value[pk], path.concat([pk]), out);
+        }
+    } else if (sub.type === 'array') {
+        const arr = value || [];
+        if ((sub.minItems || 0) > arr.length) out.push(path.join('.') + ' (' + arr.length + '/' + sub.minItems + ' items)');
+        if (arr.length) arr.forEach((it, i) => collectMissing(resolveProp(sub.items), it, path.concat([String(i)]), out));
+    }
+}
+
+function highlightJSON(str) {
+    let out = '', i = 0;
+    while (i < str.length) {
+        const ch = str[i];
+        if (ch === '"') {
+            let j = i + 1, s = '"';
+            while (j < str.length) {
+                const c = str[j]; s += c;
+                if (c === '\\') { s += str[j + 1] || ''; j += 2; continue; }
+                j++; if (c === '"') break;
+            }
+            let k = j; while (k < str.length && /\s/.test(str[k])) k++;
+            out += (str[k] === ':' ? '<span class="key">' : '<span class="str">') + esc(s) + '</span>';
+            i = j;
+        } else if (/[0-9\-]/.test(ch)) {
+            let j = i; while (j < str.length && /[0-9eE+\-.]/.test(str[j])) j++;
+            out += '<span class="num">' + esc(str.slice(i, j)) + '</span>';
+            i = j;
+        } else if (str.startsWith('true', i) || str.startsWith('false', i) || str.startsWith('null', i)) {
+            const m = str.slice(i).match(/^(true|false|null)/)[0];
+            out += '<span class="bool">' + m + '</span>';
+            i += m.length;
+        } else {
+            out += esc(ch);
+            i++;
+        }
+    }
+    return out;
+}
+
+function syncAriaExpanded() {
+    document.querySelectorAll('.collapse-toggle, .item-card-header[role="button"]').forEach(btn => {
+        const target = btn.closest('.entity-card, .nested-card, .item-card');
+        if (!target) return;
+        const collapseDiv = target.querySelector('.collapse');
+        if (collapseDiv) btn.setAttribute('aria-expanded', collapseDiv.classList.contains('show') ? 'true' : 'false');
+    });
+}
+function refresh() {
+    pruneEmpty();
+    renderPreview();
+    renderValidation();
+    $('#count-parts').textContent = (DATA && Array.isArray(DATA.parts)) ? DATA.parts.length : 0;
+    syncAriaExpanded();
+}
+function renderPreview() {
+    const pre = $('#json-preview');
+    if (!DATA) {
+        pre.innerHTML = '<span style="color:#6c757d">// No description yet — click “New” or load one.</span>';
+        $('#json-size').textContent = '0 B';
+        return;
+    }
+    const txt = JSON.stringify(DATA, null, 2);
+    pre.innerHTML = highlightJSON(txt);
+    $('#json-size').textContent = formatBytes(txt.length);
+}
+function renderValidation() {
+    const b = $('#validation-badge');
+    if (!DATA) { b.textContent = '—'; b.className = 'badge text-bg-light border'; b.title = ''; return; }
+    const missing = [];
+    collectMissing(SCHEMA, DATA, [], missing);
+    if (!missing.length) {
+        b.textContent = 'Complete';
+        b.className = 'badge text-bg-success';
+        b.title = 'All required fields present';
+    } else {
+        b.textContent = missing.length + ' missing';
+        b.className = 'badge text-bg-warning text-dark';
+        b.title = 'Missing required:\n' + missing.join('\n');
+    }
+}
+
+/* ---------------- root rendering ---------------- */
+const BASIC_KEYS = ['name', 'provider', 'location', 'installed_at', 'website', 'version', 'schema_version', 'comment', 'further_metadata'];
+function showForm() {
+    $('#empty-state').classList.add('d-none');
+    $('#form-area').classList.remove('d-none');
+}
+function renderRoot() {
+    const basic = $('#pane-basic'), parts = $('#pane-parts'), soft = $('#pane-software');
+    basic.textContent = '';
+    buildBodyContent(basic, SCHEMA, DATA || {}, [], BASIC_KEYS, { bodyEl: basic, sub: SCHEMA, path: [], keys: BASIC_KEYS });
+    parts.textContent = '';
+    parts.appendChild(renderField(resolveProp(SCHEMA.properties.parts), DATA && DATA.parts, ['parts'],
+        (SCHEMA.required || []).includes('parts'), 'parts', { bodyEl: parts, sub: SCHEMA, path: [], keys: null }));
+    soft.textContent = '';
+    const softSub = SCHEMA.properties && SCHEMA.properties.software_stack;
+    if (softSub) {
+        soft.appendChild(renderField(resolveProp(softSub), DATA && DATA.software_stack, ['software_stack'],
+            (SCHEMA.required || []).includes('software_stack'), 'software_stack', { bodyEl: soft, sub: SCHEMA, path: [], keys: null }));
+    } else {
+        soft.appendChild(makeEl('div', 'small-note', 'Software stack is defined per part. Edit it within each part\'s card in the Parts tab.'));
+    }
+    refresh();
+}
+
+/* ---------------- data actions ---------------- */
+function seedNew() {
+    return {
+        name: '', location: '', installed_at: '',
+        schema_version: '0.5.0', version: '1.0.0',
+        provider: { name: '' },
+        parts: [{
+            id: '', name: '', part_type: '',
+            node_types: [{ id: '', node_type_name: '', cpus: [{}], memory: [{}] }]
+        }]
+    };
+}
+function newData() {
+    DATA = seedNew();
+    lastFilename = 'system-description.json';
+    showForm(); renderRoot();
+    console.info('[editor] new description created');
+}
+function loadData(obj, name) {
+    if (!SCHEMA) { notice('Schema not loaded yet.', 'warning'); return; }
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) { notice('Not a JSON object.', 'danger'); return; }
+    DATA = deepCopy(obj);
+    lastFilename = name || ((obj.name && typeof obj.name === 'string') ? slug(obj.name) + '.json' : 'system-description.json');
+    const known = new Set(Object.keys(SCHEMA.properties || {}));
+    const extra = Object.keys(DATA).filter(k => !known.has(k));
+    if (extra.length) notice('Kept ' + extra.length + ' key(s) not defined in the schema (' + extra.join(', ') + '). They are preserved in the output but not editable.', 'info', 10000);
+    showForm(); renderRoot();
+    console.info('[editor] loaded description', { source: name || 'pasted', topLevelKeys: Object.keys(DATA) });
+}
+
+/* ---------------- actions ---------------- */
+async function copyJson() {
+    if (!DATA) { notice('Nothing to copy yet.', 'warning'); return; }
+    const txt = JSON.stringify(DATA, null, 2);
+    try {
+        await navigator.clipboard.writeText(txt);
+        notice('JSON copied to clipboard.', 'success', 3000);
+    } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = txt;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); notice('JSON copied to clipboard.', 'success', 3000); }
+        catch (e2) { notice('Clipboard unavailable — select the JSON preview manually.', 'danger', 6000); }
+        ta.remove();
+    }
+}
+function downloadJson() {
+    if (!DATA) { notice('Nothing to download yet.', 'warning'); return; }
+    const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = lastFilename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1500);
+}
+async function loadExample() {
+    try {
+        const r = await fetch('../descriptions/system-jupiter.json', { cache: 'no-store' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        loadData(await r.json(), 'system-jupiter.json');
+    } catch (e) {
+        notice('Could not load example: ' + e.message, 'warning');
+    }
+}
+function openPasteModal(mode) {
+    pasteMode = mode;
+    if (mode === 'schema') {
+        $('#pasteModalTitle').textContent = 'Paste schema JSON';
+        $('#pasteModalHint').textContent = 'Paste the content of system-description-0.5.0.json here.';
+    } else {
+        $('#pasteModalTitle').textContent = 'Paste system JSON';
+        $('#pasteModalHint').textContent = 'Paste a JSON system description below. It will be parsed and loaded into the form for editing.';
+    }
+    $('#paste-text').value = '';
+    bootstrap.Modal.getOrCreateInstance($('#pasteModal')).show();
+}
+function handlePasteOk() {
+    const txt = $('#paste-text').value.trim();
+    if (!txt) { notice('Nothing to parse.', 'warning'); return; }
+    let obj;
+    try { obj = JSON.parse(txt); } catch (e) { notice('Invalid JSON: ' + e.message, 'danger', 6000); return; }
+    bootstrap.Modal.getInstance($('#pasteModal')).hide();
+    if (pasteMode === 'schema') {
+        SCHEMA = obj; SCHEMA_SOURCE = 'paste';
+        afterSchema();
+    } else {
+        loadData(obj, null);
+    }
+}
+
+/* ---------------- schema boot ---------------- */
+function schemaVer() {
+    const m = SCHEMA['x-schema-metadata'];
+    if (m && m.schema_version) return m.schema_version;
+    const p = SCHEMA.properties && SCHEMA.properties.schema_version;
+    if (p && Array.isArray(p.enum) && p.enum.length) return String(p.enum[0]);
+    return '?';
+}
+function afterSchema() {
+    $('#schema-badge').innerHTML =
+        '<i class="bi bi-check-circle me-1 text-success"></i>' +
+        (SCHEMA_SOURCE === 'fetch' ? 'Schema v' + schemaVer() + ' · system-description-0.5.0.json' : 'Schema loaded from ' + SCHEMA_SOURCE);
+
+    const info = $('#schema-info');
+    info.textContent = '';
+    const dl = makeEl('dl', 'row small mb-0');
+    const rows = [
+        ['Title', SCHEMA.title || '—'],
+        ['Description', SCHEMA.description || '—'],
+        ['Schema version', schemaVer()],
+        ['$id', SCHEMA.$id || '—']
+    ];
+    for (const [k, v] of rows) {
+        const dt = makeEl('dt', 'col-sm-4 text-muted fw-normal', k);
+        const dd = makeEl('dd', 'col-sm-8 mb-1', v);
+        dl.appendChild(dt); dl.appendChild(dd);
+    }
+    info.appendChild(dl);
+
+    wireButtons();
+    newData();
+    console.info('[editor] schema parsed OK', { version: schemaVer(), definitions: Object.keys(SCHEMA.definitions || {}).length });
+}
+function wireButtons() {
+    $('#btn-new').addEventListener('click', newData);
+    $('#btn-new-big').addEventListener('click', newData);
+    $('#btn-load').addEventListener('click', () => $('#file-input').click());
+    $('#btn-load-big').addEventListener('click', () => $('#file-input').click());
+    $('#btn-paste').addEventListener('click', () => openPasteModal('system'));
+    $('#btn-example').addEventListener('click', loadExample);
+    $('#btn-copy').addEventListener('click', copyJson);
+    $('#btn-copy2').addEventListener('click', copyJson);
+    $('#btn-download').addEventListener('click', downloadJson);
+    $('#btn-download2').addEventListener('click', downloadJson);
+    $('#paste-ok').addEventListener('click', handlePasteOk);
+}
+function wireStatic() {
+    $('#file-input').addEventListener('change', async e => {
+        const f = e.target.files[0];
+        if (!f) return;
+        try { loadData(JSON.parse(await f.text()), f.name); }
+        catch (err) { notice('Could not read file: ' + err.message, 'danger', 6000); }
+        e.target.value = '';
+    });
+    $('#file-input-schema').addEventListener('change', async e => {
+        const f = e.target.files[0];
+        if (!f) return;
+        try { SCHEMA = JSON.parse(await f.text()); SCHEMA_SOURCE = 'file (' + f.name + ')'; afterSchema(); }
+        catch (err) { notice('Could not read schema file: ' + err.message, 'danger', 6000); }
+        e.target.value = '';
+    });
+    $('#paste-ok').addEventListener('click', handlePasteOk);
+    // Enter in textarea -> load
+    $('#paste-text').addEventListener('keydown', e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handlePasteOk();
+    });
+}
+async function loadSchema() {
+    try {
+        const r = await fetch('system-description-0.5.0.json', { cache: 'no-store' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        SCHEMA = await r.json();
+        SCHEMA_SOURCE = 'fetch';
+        afterSchema();
+    } catch (e) {
+        console.warn('[editor] schema fetch failed:', e.message);
+        $('#schema-badge').innerHTML = '<i class="bi bi-exclamation-triangle me-1 text-warning"></i>Schema not loaded';
+        // persistent fallback alert with manual options
+        const box = makeEl('div', 'alert alert-warning py-2');
+        const msg = makeEl('span');
+        msg.textContent = 'Could not fetch system-description-0.5.0.json (' + e.message + '). This happens when the page is opened via file:// — pick the schema file manually to continue.';
+        box.appendChild(msg);
+        const btnFile = makeEl('button', 'btn btn-sm btn-warning ms-2');
+        btnFile.type = 'button';
+        btnFile.textContent = 'Choose schema file…';
+        btnFile.addEventListener('click', () => $('#file-input-schema').click());
+        const btnPaste = makeEl('button', 'btn btn-sm btn-outline-warning ms-2');
+        btnPaste.type = 'button';
+        btnPaste.textContent = 'Paste schema…';
+        btnPaste.addEventListener('click', () => openPasteModal('schema'));
+        box.appendChild(btnFile);
+        box.appendChild(btnPaste);
+        $('#notices').prepend(box);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    wireStatic();
+    loadSchema();
+});
+</script>
+</body>
+</html>

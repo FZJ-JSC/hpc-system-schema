@@ -1,0 +1,100 @@
+{
+  "schema_version": "0.5.0",
+  "version": "1.0.0",
+  "name": "Aurora",
+  "provider": {
+    "name": "Argonne Leadership Computing Facility",
+    "location": "Lemont, Illinois, USA",
+    "website": "https://www.alcf.anl.gov"
+  },
+  "location": "Lemont, Illinois, USA",
+  "installed_at": "2024-06-01T00:00:00Z",
+  "website": "https://www.alcf.anl.gov/aurora",
+  "comment": "Aurora is a HPE Cray EX exascale supercomputer at ALCF. 10,624 compute nodes, each with 2x Intel Xeon CPU Max 9470 (52 cores) and 6x Intel Data Center GPU Max 1550 (Ponte Vecchio, 128 GB HBM2e each). TBD: exact installation date not publicly documented; full 10,624-node system first ranked on TOP500 in June 2024 (1.012 EFLOPS HPL). Source: https://www.alcf.anl.gov/aurora",
+  "parts": [
+    {
+      "id": "part-aurora-compute",
+      "name": "Aurora Compute Partition",
+      "provider": "HPE",
+      "product_name": "HPE Cray EX",
+      "part_type": "compute",
+      "node_count": 10624,
+      "comment": "10,624 compute nodes, each with 2x Intel Xeon CPU Max 9470 and 6x Intel Data Center GPU Max 1550. Source: https://www.alcf.anl.gov/aurora",
+      "physical_location": {
+        "site": "Argonne National Laboratory",
+        "datacenter": "Argonne Leadership Computing Facility (ALCF)"
+      },
+      "node_types": [
+        {
+          "id": "nd-aurora-standard",
+          "node_type_name": "standard compute node",
+          "node_count": 10624,
+          "cpus": [
+            {
+              "id": "cpu-aurora-xeon-max-9470",
+              "manufacturer": "Intel",
+              "name": "Xeon CPU Max 9470",
+              "sku": "9470",
+              "architecture": "Sapphire Rapids",
+              "isa": "x86-64",
+              "cores_per_cpu": 52,
+              "threads_per_core": 2,
+              "number_of_sockets": 2
+            }
+          ],
+          "memory": [
+            {
+              "id": "mem-aurora-hbm2e",
+              "amount": {
+                "quantity": 128,
+                "unit": "GB"
+              },
+              "type": "HBM2e",
+              "comment": "On-package HBM2e: 64 GB per Xeon Max 9470 x 2 sockets = 128 GB per node. Source: https://www.alcf.anl.gov/aurora"
+            },
+            {
+              "id": "mem-aurora-ddr5",
+              "amount": {
+                "quantity": 1024,
+                "unit": "GB"
+              },
+              "type": "DDR5-4800",
+              "bandwidth": {
+                "quantity": 614.4,
+                "unit": "GB/s",
+                "comment": "2 sockets x 8 channels x 38.4 GB/s = 614.4 GB/s theoretical peak per node"
+              },
+              "comment": "2 x 512 GB DDR5 per node. Source: https://www.alcf.anl.gov/aurora"
+            }
+          ],
+          "accelerators": [
+            {
+              "id": "acc-aurora-max-1550",
+              "kind": "GPU",
+              "manufacturer": "Intel",
+              "name": "Data Center GPU Max 1550",
+              "sku": "Max 1550",
+              "architecture": "Ponte Vecchio",
+              "count_per_node": 6,
+              "memory": {
+                "id": "mem-aurora-max-1550",
+                "amount": {
+                  "quantity": 128,
+                  "unit": "GB"
+                },
+                "type": "HBM2e"
+              },
+              "tdp": {
+                "quantity": 600,
+                "unit": "W",
+                "comment": "TBD: approximate; per Intel ARK for Max 1550 OAM"
+              },
+              "cores": 128,
+              "comment": "128 Xe cores per GPU; 6 GPUs per node = 768 GB HBM2e per node"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

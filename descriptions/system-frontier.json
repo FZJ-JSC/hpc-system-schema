@@ -1,0 +1,104 @@
+{
+  "schema_version": "0.5.0",
+  "version": "1.0.0",
+  "name": "Frontier",
+  "provider": {
+    "name": "Oak Ridge Leadership Computing Facility (OLCF)",
+    "location": "Oak Ridge, Tennessee, USA",
+    "website": "https://www.olcf.ornl.gov"
+  },
+  "location": "Oak Ridge, Tennessee, USA",
+  "installed_at": "2022-05-01T00:00:00Z",
+  "website": "https://docs.olcf.ornl.gov/systems/frontier_user_guide.html",
+  "comment": "Frontier is a HPE Cray EX exascale supercomputer at OLCF. With a theoretical peak double-precision performance of approximately 2 exaflops (2 quintillion calculations per second), it is the fastest system in the world for a wide range of traditional computational science applications. The system has 77 Olympus rack HPE cabinets, each with 128 AMD compute nodes, and a total of 9,856 AMD compute nodes. Source: https://docs.olcf.ornl.gov/systems/frontier_user_guide.html",
+  "parts": [
+    {
+      "id": "part-frontier-compute",
+      "name": "Frontier Compute Partition",
+      "provider": "HPE",
+      "product_name": "HPE Cray EX",
+      "part_type": "compute",
+      "node_count": 9856,
+      "comment": "77 Olympus rack cabinets x 128 nodes each = 9,856 compute nodes. Source: https://docs.olcf.ornl.gov/systems/frontier_user_guide.html",
+      "power_draw_peak": {
+        "quantity": 21,
+        "unit": "MW",
+        "comment": "approximate; OLCF reports total facility power but exact peak compute power not publicly documented"
+      },
+      "physical_location": {
+        "site": "Oak Ridge National Laboratory",
+        "datacenter": "Oak Ridge Leadership Computing Facility (OLCF)"
+      },
+      "node_types": [
+        {
+          "id": "nd-frontier-standard",
+          "node_type_name": "standard compute node",
+          "node_count": 9856,
+          "cpus": [
+            {
+              "id": "cpu-frontier-epyc",
+              "manufacturer": "AMD",
+              "name": "EPYC 7A53",
+              "sku": "7A53",
+              "architecture": "Zen 3",
+              "isa": "x86-64",
+              "cores_per_cpu": 64,
+              "threads_per_core": 2,
+              "number_of_sockets": 1,
+              "base_frequency": {
+                "quantity": 2.0,
+                "unit": "GHz"
+              }
+            }
+          ],
+          "memory": [
+            {
+              "id": "mem-frontier-ddr4",
+              "amount": {
+                "quantity": 512,
+                "unit": "GB"
+              },
+              "type": "DDR4-3200",
+              "bandwidth": {
+                "quantity": 204.8,
+                "unit": "GB/s",
+                "comment": "8 channels x 25.6 GB/s = 204.8 GB/s theoretical peak"
+              },
+              "numa_domains": 4,
+              "comment": "512 GB DDR4 per node with 4 NUMA domains. Source: https://docs.olcf.ornl.gov/systems/frontier_user_guide.html"
+            }
+          ],
+          "accelerators": [
+            {
+              "id": "acc-frontier-mi250x",
+              "kind": "GPU",
+              "manufacturer": "AMD",
+              "name": "Instinct MI250X",
+              "sku": "MI250X",
+              "architecture": "CDNA 2",
+              "isa": "AMDGCN",
+              "count_per_node": 4,
+              "memory": {
+                "id": "mem-frontier-mi250x",
+                "amount": {
+                  "quantity": 128,
+                  "unit": "GB",
+                  "comment": "HBM2E per GCD (compute die); 2 GCDs per MI250X = 128 GB per MI250X card"
+                },
+                "type": "HBM2E"
+              },
+              "tdp": {
+                "quantity": 500,
+                "unit": "W",
+                "comment": "From AMD website; base TDP, not peak"
+              },
+              "cores": 208,
+              "comment": "Each MI250X has 2 Graphics Compute Dies (GCDs); the 8 GCDs per node appear as 8 separate GPUs to Slurm and ROCm"
+            }
+          ],
+          "comment": "9,856 identical compute nodes. 56 allocatable cores per node (8 reserved: 1 core per L3 region for system processes and SLURM core specialization). Source: https://docs.olcf.ornl.gov/systems/frontier_user_guide.html"
+        }
+      ]
+    }
+  ]
+}

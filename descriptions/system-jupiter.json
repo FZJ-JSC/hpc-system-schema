@@ -1,0 +1,577 @@
+{
+  "schema_version": "0.5.0",
+  "version": "1.0.0",
+  "name": "JUPITER",
+  "provider": {
+    "name": "Forschungszentrum Jülich GmbH",
+    "institute": "Jülich Supercomputing Centre",
+    "location": "Jülich, Germany",
+    "abbreviation": "JSC",
+    "persistent_identifier": {
+      "identifier_name": "ROR",
+      "id": "04g2j9721"
+    },
+    "website": "https://www.fz-juelich.de/jsc"
+  },
+  "location": "Jülich, Germany",
+  "installed_at": "2025-09-05T00:00:00Z",
+  "website": "https://apps.fz-juelich.de/jsc/hps/jupiter/",
+  "parts": [
+    {
+      "id": "part-jupiter-booster",
+      "name": "JUPITER Booster",
+      "provider": "Forschungszentrum Jülich GmbH",
+      "product_name": "Bull Sequana XH3000",
+      "installed_at": "2025-09-05T00:00:00Z",
+      "funders": [
+        "EuroHPC JU",
+        "BMFTR",
+        "NRW-MKW"
+      ],
+      "part_type": "compute",
+      "node_count": 5884,
+      "power_draw_peak": {
+        "quantity": 17,
+        "unit": "MW"
+      },
+      "power_details": {
+        "tdp_per_node_kw": 3,
+        "comment": "4 × 680 W per GH200 superchip plus HCA and periphery; number estimated"
+      },
+      "cooling": {"type": "liquid"},
+      "node_types": [
+        {
+          "id": "node-jupiter-booster-gpu",
+          "node_type_name": "Compute Node",
+          "tdp_per_superchip": {
+            "quantity": 680,
+            "unit": "W",
+            "comment": "TDP is shared per superchip. CPU gets priority and GPU can use remainder. CPU can be capped, cap can be configured. Currently, default cap is at 100 W, but user-modifiable."
+          },
+          "cpus": [
+            {
+              "id": "cpu-nvidia-grace",
+              "manufacturer": "NVIDIA",
+              "name": "Grace",
+              "sku": "GH200 Grace CPU NVL4",
+              "architecture": "Neoverse-V2",
+              "isa": "ARMv9",
+              "cores_per_cpu": 72,
+              "threads_per_core": 1,
+              "base_frequency": {
+                "quantity": 3.1,
+                "unit": "GHz"
+              },
+              "tdp": {
+                "quantity": 100,
+                "unit": "W",
+                "comment": "Actually 680 W per superchip, here separated between CPU and GPU"
+              },
+              "number_of_sockets": 4,
+              "cpu_to_cpu_link": {
+                "id": "link-grace-cnvlink",
+                "type": "cNVLink",
+                "bandwidth": {
+                  "quantity": 200,
+                  "unit": "GB/s",
+                  "comment": "100 GB/s per direction between pairs of CPUs"
+                },
+                "comment": "CPU-to-CPU cNVLink: pairs of Grace CPUs connected at 100 GB/s per direction"
+              },
+              "comment": "NVIDIA Grace CPU (Arm Neoverse-V2), 72 cores per superchip, 4 superchips per node = 288 cores."
+            }
+          ],
+          "memory": [
+            {
+              "id": "mem-grace-lpddr5x",
+              "amount": {
+                "quantity": 480,
+                "unit": "GB",
+                "comment": "4 × 120 GB per superchip"
+              },
+              "type": "LPDDR5X",
+              "bandwidth": {
+                "quantity": 512,
+                "unit": "GB/s",
+                "comment": "Per superchip at 8532 MHz"
+              },
+              "numa_domains": 4,
+              "comment": "LPDDR5X CPU memory: 120 GB per Grace superchip at 512 GB/s. 4 superchips = 480 GB per node."
+            }
+          ],
+          "accelerators": [
+            {
+              "id": "acc-nvidia-hopper",
+              "kind": "GPU",
+              "manufacturer": "NVIDIA",
+              "name": "Hopper",
+              "sku": "GH200 Hopper GPU",
+              "architecture": "Hopper",
+              "isa": "SM90",
+              "count_per_node": 4,
+              "cores": 132,
+              "comment": "NVIDIA Hopper H100: 132 SMs, 96 GB HBM3 at 4 TB/s per GPU.",
+              "clock_rate": {
+                "quantity": 1980,
+                "unit": "MHz",
+                "comment": "GPU Boost clock rate"
+              },
+              "memory": {
+                "id": "mem-jupiter-hopper-hbm3",
+                "amount": {
+                  "quantity": 96,
+                  "unit": "GB",
+                  "comment": "96 GB HBM3 per node"
+                },
+                "type": "HBM3",
+                "bandwidth": {
+                  "quantity": 4000,
+                  "unit": "GB/s",
+                  "comment": "4 TB/s per Hopper"
+                }
+              },
+              "tdp": {
+                "quantity": 580,
+                "unit": "W",
+                "comment": "Actually 680 W per superchip, here 580 W for GPU."
+              },
+              "cpu_to_accelerator_link": {
+                "id": "link-nvlink-c2c",
+                "type": "NVLink-C2C",
+                "bandwidth": {
+                  "quantity": 900,
+                  "unit": "GB/s",
+                  "comment": "Per superchip: CPU↔GPU at 900 GB/s, 450 GB/s per direction."
+                },
+                "comment": "NVLink-C2C CPU-to-GPU: 900 GB/s per superchip"
+              },
+              "accelerator_to_accelerator_link": {
+                "id": "link-nvlink4",
+                "type": "NVLink 4",
+                "bandwidth": {
+                  "quantity": 300,
+                  "unit": "GB/s",
+                  "comment": "300 GB/s between pairs of GPUs (150 GB/s per direction)"
+                },
+                "comment": "NVLink 4 GPU-to-GPU: 300 GB/s between pairs within the node"
+              }
+            }
+          ],
+          "network": [
+            {
+              "id": "net-jupiter-ib-booster",
+              "type": "InfiniBand NDR200",
+              "manufacturer": "NVIDIA",
+              "model": "ConnectX-7",
+              "adapters_per_node": 4,
+              "bandwidth": {
+                "quantity": 200,
+                "unit": "Gb/s",
+                "comment": "200 Gbit/s per adapter"
+              },
+              "cpu_to_network_link": {
+                "id": "link-cpu-ib-booster",
+                "type": "PCIe 5.0",
+                "bandwidth": {
+                  "quantity": 128,
+                  "unit": "GB/s",
+                  "comment": "64 GB/s per direction"
+                }
+              },
+              "adapter_to_switch_link": {
+                "id": "link-ib-switch-booster",
+                "type": "InfiniBand NDR200",
+                "bandwidth": {
+                  "quantity": 200,
+                  "unit": "Gb/s",
+                  "comment": "200 Gbit/s per HCA to L1 switch via split-cables"
+                }
+              },
+              "comment": "4× ConnectX-7 NDR200 adapters per node, 200 Gbit/s each. 800 Gbit/s aggregate per node"
+            }
+          ]
+        }
+      ],
+      "network": [
+        {
+          "id": "net-jupiter-dragonfly",
+          "name": "JUPITER High-Speed Interconnect",
+          "type": "InfiniBand NDR",
+          "bandwidth": {
+            "quantity": 400,
+            "unit": "Gb/s",
+            "comment": "Per link bandwidth between switches: 400 Gbit/s"
+          },
+          "manufacturer": "NVIDIA",
+          "sku": "Quantum-2 NDR200",
+          "adapters_per_node": 4,
+          "topology": "Dragonfly+",
+          "topology_parts": [ 
+            {
+              "id": "top-dragonfly-global",
+              "name": "Dragonfly+ Global",
+              "bandwidth_per_link": {
+                "id": "link-inter-group",
+                "type": "InfiniBand NDR400",
+                "bandwidth": {
+                  "quantity": 400,
+                  "unit": "Gb/s",
+                  "comment": "Between L2 switches: 400 Gbit/s per link"
+                }
+              },
+              "features": [
+                "Adaptive Routing",
+                "Priority Flow Control"
+              ],
+              "number_of_groups": 27
+            },
+            {
+              "id": "top-dragonfly-group",
+              "name": "Dragonfly+ Group",
+              "bandwidth_per_link": {
+                "id": "link-intra-group",
+                "type": "InfiniBand NDR400",
+                "bandwidth": {
+                  "quantity": 400,
+                  "unit": "Gb/s",
+                  "comment": "Between switches (L1↔L2): 400 Gbit/s per link"
+                }
+              },
+              "total_switches": 31,
+              "features": [
+                "Adaptive Routing",
+                "Priority Flow Control"
+              ],
+              "comment": "240 nodes per group over 5 physical racks. 15 L1 (lower) + 16 L2 (higher) switches."
+            }
+          ],
+          "comment": "27 Dragonfly+ groups total: 25 Booster, 1 Cluster, 1 administrative. NVIDIA Mellanox Quantum InfiniBand NDR. Adaptive routing enabled. Source: JUPITER docs"
+        }
+      ],
+      "physical_location": {
+        "site": "Jülich",
+        "datacenter": "Modular Data Center",
+        "hall": "Modules 1-7"
+      },
+      "software_stack": {
+        "system_software": {
+          "operating_system": {
+            "type": "Linux",
+            "flavor": "RHEL",
+            "version": "9.8"
+          },
+          "kernel_version": "5.14.0-687.22.1.el9_8.0.1",
+          "firmware_versions": [
+            {
+              "component": "GPU Driver",
+              "version": "595.71.05-1",
+              "comment": "NVIDIA GPU Driver"
+            },
+            {
+              "component": "OFED",
+              "version": "26.04",
+              "comment": "Mellanox/NVIDIA OFED for InfiniBand"
+            }
+          ],
+          "scheduler": {
+            "name": "Slurm",
+            "version": "24.11.6"
+          },
+          "comment": "JUPITER system software stack. Default Software Stage: 2026. Apptainer 1.4.5, PMIx 5.0.8 also installed. Eviden Smart Management Center xScale for management."
+        },
+        "user_software": {
+          "compilers": [
+            {
+              "name": "GCC",
+              "version": "14.3.0",
+              "variant": "module",
+              "comment": "GNU Compiler Collection. Available via EasyBuild module system"
+            },
+            {
+              "name": "NVIDIA HPC SDK",
+              "version": "25.9",
+              "variant": "module",
+              "comment": "NVIDIA HPC SDK. Available via EasyBuild module system. Call nvidia-compilers on system."
+            }
+          ],
+          "mpis": [
+            {
+              "name": "OpenMPI",
+              "version": "5.0.8",
+              "variant": "module",
+              "comment": "CUDA-aware MPI"
+            },
+            {
+              "name": "ParaStationMPI",
+              "version": "5.13.0-1",
+              "variant": "module",
+              "comment": "CUDA-aware MPI"
+            }
+          ],
+          "comment": "Scientific software distributed via EasyBuild module system. See https://apps.fz-juelich.de/jsc/software/jupiter/ for full module list."
+        }
+      }
+    },
+    {
+      "inherits_from": "part-jupiter-booster",
+      "id": "part-jupiter-booster-login",
+      "name": "JUPITER Login Nodes",
+      "part_type": "other",
+      "other_type_name": "login",
+      "node_count": 12,
+      "comment": "12 login/frontend nodes: 1× GH200 Grace-Hopper Superchip each, 72 CPU cores, 480 GB LPDDR5X, 1 GPU (H100 96 GB). 1× IB NDR + 100 GbE external + 1× 960 GB NVMe local. Source: JUPITER docs",
+      "network": [
+        {
+          "id": "net-jupiter-login-100gbe",
+          "name": "External 100GbE",
+          "type": "Ethernet 100GbE",
+          "bandwidth": {
+            "quantity": 100,
+            "unit": "Gb/s",
+            "comment": "100 Gigabit Ethernet"
+          },
+          "adapters_per_node": 1,
+          "comment": "100 Gigabit Ethernet external connection for login access. Source: JUPITER docs"
+        }
+      ],
+      "node_types": [
+        {
+          "inehrits_from": "node-jupiter-booster-gpu",
+          "id": "node-jupiter-login",
+          "node_type_name": "JUPITER Booster Login",
+          "comment": "Login node: 1× GH200 Grace-Hopper Superchip. Differences from Booster: 480 GB LPDDR5X (vs 120 GB), 384 GB/s memory bandwidth, TDP 900 W. Source: JUPITER docs",
+          "tdp_per_superchip": {
+            "quantity": 1000,
+            "unit": "W",
+            "comment": "TDP is shared per superchip. CPU gets priority and GPU can use remainder."
+          },
+          "cpus": [
+            {
+              "id": "cpu-nvidia-grace-login",
+              "name": "GH200 Grace CPU",
+              "manufacturer": "NVIDIA",
+              "cores_per_cpu": 72,
+              "threads_per_core": 1,
+              "tdp": {
+                "quantity": 300,
+                "unit": "W",
+                "comment": "TDP for Grace; actually defined through the TDP for superchip"
+              },
+              "number_of_sockets": 1
+            }
+          ],
+          "memory": [
+            {
+              "id": "mem-grace-lpddr5x-login",
+              "amount": {
+                "quantity": 480,
+                "unit": "GB"
+              },
+              "type": "LPDDR5X",
+              "bandwidth": {
+                "quantity": 384,
+                "unit": "GB/s",
+                "comment": "6400 MHz"
+              },
+              "numa_domains": 1,
+              "comment": "480 GB LPDDR5X at 384 GB/s. Source: JUPITER docs"
+            }
+          ],
+          "accelerators": [
+            {
+              "id": "acc-hopper-login",
+              "name": "GH200 Hopper GPU",
+              "kind": "GPU",
+              "manufacturer": "NVIDIA",
+              "count_per_node": 1,
+              "memory": {
+                "id": "mem-hopper-hbm3-login",
+                "amount": {
+                  "quantity": 96,
+                  "unit": "GB"
+                },
+                "type": "HBM3"
+              },
+              "tdp": {
+                "quantity": 600,
+                "unit": "W",
+                "comment": "TDP for Hopper; actually defined through the TDP for superchip"
+              }
+            }
+          ],
+          "on_node_storage": [
+            {
+              "id": "stor-login-nvme",
+              "name": "Local NVMe OS Disk",
+              "type": "NVMe",
+              "amount_per_node": {
+                "quantity": 960,
+                "unit": "GB"
+              },
+              "storage_role": "boot",
+              "comment": "1× 960 GB NVMe per login node for operating system."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "part-jupiter-storage-exastore",
+      "name": "JUPITER Storage (ExaSTORE)",
+      "provider": "Forschungszentrum Jülich GmbH",
+      "product_name": "IBM Storage Scale (GPFS)",
+      "installed_at": "2025-09-05T00:00:00Z",
+      "funders": [
+        "BMFTR",
+        "NRW-MKW"
+      ],
+      "part_type": "storage",
+      "node_count": 20,
+      "comment": "Storage cluster ExaSTORE provides all user-accessible parallel file systems on JUPITER via Multi-Cluster GPFS. Separate storage system; not located in the same racks as compute. Source: https://apps.fz-juelich.de/jsc/hps/jupiter/filesystems.html",
+      "storage_system": {
+        "id": "stor-exastore-gpfs",
+        "name": "ExaSTORE Multi-Cluster GPFS",
+        "type": "GPFS",
+        "manufacturer": "IBM",
+        "product_name": "IBM Storage Scale",
+        "total_amount": {
+          "quantity": 40,
+          "unit": "PB",
+          "comment": "Net capacity"
+        }
+      },
+      "network": [
+        {
+          "id": "net-jupiter-storage-ib",
+          "name": "Storage Network",
+          "type": "InfiniBand NDR",
+          "bandwidth": {
+            "quantity": 1,
+            "unit": "Tb/s",
+            "comment": "Read bandwidth"
+          },
+          "manufacturer": "NVIDIA",
+          "adapters_per_node": 1,
+          "comment": "ExaSTORE storage cluster connects to compute via the same InfiniBand fabric."
+        }
+      ],
+      "further_metadata": {
+        "filesystems": [
+          {
+            "variable": "$HOME / $EXAHOME",
+            "usable_space": "65 TB",
+            "blocksize": "1 MB",
+            "description": "User home directory on GPFS",
+            "backup": "ISP (tape)",
+            "accessibility": "Login + Compute"
+          },
+          {
+            "variable": "$SCRATCH / $EXASCRATCH",
+            "usable_space": "11 PB",
+            "blocksize": "8 MB",
+            "description": "Standard scratch for bandwidth-intensive workloads",
+            "backup": "No",
+            "accessibility": "Login + Compute",
+            "retention": "Files auto-deleted after 90 days; empty dirs after 3 days"
+          },
+          {
+            "variable": "$PROJECT / $EXAPROJECT",
+            "usable_space": "5.1 PB",
+            "blocksize": "4 MB",
+            "description": "Project directory for source code, binaries, libraries",
+            "backup": "ISP (tape)",
+            "accessibility": "Login + Compute"
+          },
+          {
+            "variable": "$DATA / $EXADATA",
+            "usable_space": "21 PB",
+            "blocksize": "8 MB",
+            "description": "Large-scale data project storage",
+            "backup": "Snapshot + ISP (tape)",
+            "accessibility": "Login + Compute"
+          },
+          {
+            "variable": "$ARCHIVE / $JUSTARCHIVE",
+            "usable_space": "2.8 PB",
+            "blocksize": "2 MB",
+            "description": "Long-term archive; data migrated to tape via ISP-HSM",
+            "backup": "ISP-HSM (tape)",
+            "accessibility": "Login only"
+          }
+        ]
+      }
+    },
+    {
+      "inherits_from": "part-jupiter-storage-exastore",
+      "id": "part-jupiter-storage-exaflash",
+      "name": "JUPITER Storage (ExaFLASH)",
+      "funders": [
+        "EuroHPC JU",
+        "BMFTR",
+        "NRW-MKW"
+      ],
+      "node_count": 3,
+      "part_type": "storage",
+      "comment": "Dedicated NVMe-based storage",
+      "storage_system": {
+        "id": "stor-exaflash-gpfs",
+        "name": "ExaFLASH Multi-Cluster GPFS",
+        "type": "GPFS",
+        "manufacturer": "IBM",
+        "product_name": "IBM Storage Scale",
+        "total_amount": {
+          "quantity": 15,
+          "unit": "PB",
+          "comment": "Net capacity, NVMe"
+        }
+      },
+      "network": [
+        {
+          "id": "net-jupiter-storage-ib",
+          "name": "Storage Network",
+          "type": "InfiniBand NDR",
+          "bandwidth": {
+            "quantity": 2.1,
+            "unit": "Tb/s",
+            "comment": "Accumulated read bandwdith."
+          }
+        }
+      ],
+      "further_metadata": {
+        "filesystems": [
+          {
+            "variable": "$FSCRATCH / $EXAFSCRATCH",
+            "usable_space": "15 PB",
+            "blocksize": "8 MB",
+            "description": "Fast scratch for bandwidth and IOPS-intensive workloads",
+            "backup": "No",
+            "accessibility": "Login + Compute",
+            "retention": "Files auto-deleted after 30 days; empty dirs after 3 days"
+          }
+        ]
+      }
+    }
+  ],
+  "further_metadata": {
+    "system_id": "jupiter",
+    "classification": "exascale",
+    "status": "Early Access",
+    "project": "EuroHPC JU JUPITER",
+    "infrastructure": "FZJ/JSC",
+    "notes": "JUPITER is an exascale system under early-access phase as of 2026. The GPU-accelerated Booster partition is operational with 5884 nodes (23 536 GPUs). The CPU-only Cluster partition (582 AMD Turin + 162 SiPearl Rhea1 nodes) is under construction."
+  },
+  "comment": "JUPITER system definition conforming to system-definition schema v0.5.0. Data sourced from https://apps.fz-juelich.de/jsc/hps/jupiter/ (Sphinx user documentation). Fields marked TBD require additional documentation or are pending system finalization.",
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-08-05T00:00:00Z",
+      "changes": [
+        "Initial JUPITER system definition from official documentation",
+        "Booster partition: 5884 nodes × 4× GH200 Grace-Hopper (23 536 GPUs)",
+        "EXAJUST storage: 6 GPFS file systems, ~55 PB total usable capacity",
+        "Software: RHEL 9.8, Slurm 24.11.7, GPFS 5.2.3-8, NVIDIA driver 595.71.05",
+        "Dragonfly+ InfiniBand NDR with 27 groups and adaptive routing"
+      ]
+    }
+  ]
+}

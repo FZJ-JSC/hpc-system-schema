@@ -1,0 +1,1369 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://fzj-jsc.github.io/hpc-system-schema/schema/system-description-0.5.0.json",
+  "title": "HPC System Schema",
+  "description": "Schema for HPC system description",
+  "type": "object",
+  "required": ["name", "provider", "location", "installed_at", "parts", "schema_version", "version"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "System name.",
+      "minLength": 1,
+      "x-suggested": ["JUPITER Booster", "Perlmutter", "Frontier", "LUMI"]
+
+    },
+    "provider": {
+      "$ref": "#/definitions/common/Provider",
+      "description": "Hosting facility / provider information."
+    },
+    "location": {
+      "type": "string",
+      "description": "Physical location.",
+      "minLength": 1,
+      "x-suggested": ["Jülich, Germany", "Berkeley, CA", "Oak Ridge, TN", "Espoo, Finland"]
+    },
+    "installed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Installation date (RFC3339: YYYY-MM-DDTHH:MM:SSZ).",
+      "x-suggested": ["2024-06-01T00:00:00Z", "2023-03-15T00:00:00Z", "2022-11-01T00:00:00Z"]
+    },
+    "parts": {
+      "type": "array",
+      "description": "System partitions or components.",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/hardware/system/SystemPart"
+      }
+    },
+    "website": {
+      "type": "string",
+      "format": "uri",
+      "description": "System website URL (optional).",
+      "x-suggested": ["https://juwel.fz-juelich.de", "https://perlmutter.nersc.gov", "https://www.lumi-supercomputer.eu"]
+    },
+    "further_metadata": {
+      "$ref": "#/definitions/common/FurtherMetadata",
+      "description": "Free-form key-value metadata.",
+      "x-suggested": [{"system_id": "jupiter", "tier": "pre-exascale"}, {"datacenter": "north"}]
+    },
+    "comment": {
+      "type": "string",
+      "description": "Optional comment or notes about this system definition."
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version of this document (user-provided)",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "x-suggested": ["1.0.0", "1.0.1", "1.1.0"]
+    },
+    "schema_version": {
+      "type": "string",
+      "description": "Schema version this document conforms to (maintainer-defined)",
+      "enum": ["0.5.0"],
+      "x-suggested": ["0.5.0"]
+    }
+  },
+  "definitions": {
+    "hardware": {
+      "system": {
+        "SystemPart": {
+          "type": "object",
+          "required": ["id", "name", "part_type"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this part (UUID or semantic ID).",
+              "minLength": 1,
+              "x-suggested": ["sys-a1b2c3d4e5f6", "part-cpu-001", "part-gpu-001", "part-storage-001"]
+            },
+            "name": {
+              "type": "string",
+              "description": "Human-readable partition name.",
+              "minLength": 1,
+              "x-suggested": ["Compute Partition", "Login Partition", "Storage Partition", "GPU Partition"]
+            },
+            "provider": {
+              "type": "string",
+              "description": "Part provider.",
+              "x-suggested": ["HPE", "Dell", "Lenovo", "Supermicro", "Cisco"]
+            },
+            "product_name": {
+              "type": "string",
+              "description": "Product name (optional).",
+              "x-suggested": ["Apollo 6500", "PowerEdge C6525", "ThinkSystem SR670"]
+            },
+            "installed_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Date installation started (RFC3339).",
+              "x-suggested": ["2024-06-01T00:00:00Z"]
+            },
+            "accepted_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Date accepted (RFC3339, optional).",
+              "x-suggested": ["2025-02-01T00:00:00Z"]
+            },
+            "funders": {
+              "type": "array",
+              "description": "List of funding entities.",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "x-suggested": ["BMFTR", "DOE", "NSF"]
+            },
+            "part_type": {
+              "type": "string",
+              "enum": ["compute", "other", "storage"],
+              "description": "Part type: compute, other, or storage.",
+              "x-suggested": ["compute", "other", "storage"]
+            },
+            "other_type_name": {
+              "type": "string",
+              "description": "Required if part_type is 'other'.",
+              "x-suggested": ["login", "management", "interconnect", "service"]
+            },
+            "node_count": {
+              "type": "integer",
+              "description": "Number of nodes in this part.",
+              "minimum": 1,
+              "x-suggested": [4096, 128, 16, 1024]
+            },
+            "power_draw_peak": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Peak power draw.",
+              "x-suggested": [{"quantity": 500, "unit": "kW"}, {"quantity": 2, "unit": "MW"}]
+            },
+            "power_draw_average": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Average power draw.",
+              "x-suggested": [{"quantity": 350, "unit": "kW"}, {"quantity": 1.5, "unit": "MW"}]
+            },
+            "storage_system": {
+              "$ref": "#/definitions/hardware/storage/Storage",
+              "description": "Shared/network storage system data (separate from on-node storage (for this, see below)). Add cumulative storage data here, if part is storage."
+            },
+            "power_details": {
+              "type": "object",
+              "description": "Power consumption details (optional).",
+              "properties": {
+                "tdp_per_node_kw": {
+                  "type": "number",
+                  "description": "Thermal Design Power per node in kW.",
+                  "x-suggested": [350, 400, 500, 700]
+                },
+                "max_power_kw": {
+                  "type": "number",
+                  "description": "Maximum power consumption in kW.",
+                  "x-suggested": [500, 600, 800, 1000]
+                },
+                "further_metadata": {
+                  "$ref": "#/definitions/common/FurtherMetadata",
+                  "description": "Free-form key-value metadata."
+                },
+                "comment": {
+                  "type": "string",
+                  "description": "Free-text comment."
+                }
+              }
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form hardware metadata."
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this system part.",
+              "x-suggested": ["Primary compute partition", "GPU-accelerated nodes", "Legacy system"]
+            },
+            "inherits_from": {
+              "type": "string",
+              "description": "Name of the parent part to inherit from. All fields are inherited unless explicitly overridden in this part definition.",
+              "x-suggested": ["compute-partition-1", "gpu-partition-main", "storage-partition-1"]
+            },
+            "node_types": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Node type designs for this part (1..N node types). Each entry represents a distinct node configuration.",
+              "items": {
+                "$ref": "#/definitions/hardware/system/NodeDesign"
+              }
+            },
+            "network": {
+              "type": "array",
+              "description": "Network/interconnect specifications for this part (0..N types). This is the part-level view of the network.",
+              "items": {
+                "$ref": "#/definitions/hardware/network/GlobalNetwork"
+              }
+            },
+            "cooling": {
+              "$ref": "#/definitions/hardware/Cooling",
+              "description": "Cooling infrastructure for this part (optional)."
+            },
+            "physical_location": {
+              "$ref": "#/definitions/hardware/PhysicalLocation",
+              "description": "Physical location of this part (optional)."
+            },
+            "software_stack": {
+              "$ref": "#/definitions/software/stack/SoftwareStack",
+              "description": "Software stack for this part."
+            }
+          }
+        },
+        "NodeDesign": {
+          "type": "object",
+          "description": "Node type design specification. A part can have multiple node types (1..N).",
+          "required": ["id", "node_type_name", "cpus", "memory"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this node type.",
+              "minLength": 1,
+              "x-suggested": ["node-std-001", "node-gpu-a100", "node-hmem-001"]
+            },
+            "node_type_name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Human-readable name for this node type within the part.",
+              "x-suggested": ["standard-node", "highmem-node", "gpu-node", "login-node"]
+            },
+            "node_count": {
+              "type": "integer",
+              "description": "Number of nodes of this type.",
+              "minimum": 1,
+              "x-suggested": [4096, 128, 16, 1024]
+            },
+            "cpus": {
+              "type": "array",
+              "minItems": 1,
+              "description": "CPU specifications for this node type (1..N CPU types).",
+              "items": {
+                "$ref": "#/definitions/hardware/components/CPU"
+              }
+            },
+            "memory": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Memory specifications for this node type (1..N memory types).",
+              "items": {
+                "$ref": "#/definitions/hardware/components/Memory"
+              }
+            },
+            "accelerators": {
+              "type": "array",
+              "description": "Accelerator specifications for this node type (0..N types).",
+              "items": {
+                "$ref": "#/definitions/hardware/components/Accelerator"
+              }
+            },
+            "on_node_storage": {
+              "type": "array",
+              "description": "On-node storage specifications for this node type (0..N types).",
+              "items": {
+                "$ref": "#/definitions/hardware/storage/Storage"
+              }
+            },
+            "numa_topology": {
+              "type": "array",
+              "description": "NUMA topology for this node type.",
+              "items": {
+                "$ref": "#/definitions/hardware/components/NumaDomain"
+              }
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment for this node type.",
+              "x-suggested": ["Standard compute node", "High-memory configuration", "GPU nodes for AI workloads"]
+
+            },
+            "network": {
+              "type": "array",
+              "description": "Network connections for this node type (0..N types; node-specific view of the network). Only use relevant keys from description.",
+              "items": {
+                "$ref": "#/definitions/hardware/network/NetworkAdapter"
+              }
+            },
+            "inherits_from": {
+              "type": "string",
+              "description": "Node type name to inherit from within the same part. All fields are inherited unless explicitly overridden in this node type definition.",
+              "x-suggested": ["standard-node", "gpu-node", "highmem-node"]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        }
+      },
+      "components": {
+        "CPU": {
+          "type": "object",
+          "required": ["id", "manufacturer", "name", "cores_per_cpu", "threads_per_core"],
+          "description": "Details about CPU, data per CPU, not accumulated.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this CPU type.",
+              "minLength": 1,
+              "x-suggested": ["cpu-epyc-9654", "cpu-xeon-8480", "cpu-graviton3"]
+            },
+            "manufacturer": {
+              "type": "string",
+              "description": "CPU manufacturer (free text, 'AMD', 'Intel', 'Ampere Computing').",
+              "x-suggested": ["AMD", "Intel", "ARM", "IBM", "Fujitsu", "Ampere Computing"]
+            },
+            "name": {
+              "type": "string",
+              "description": "CPU model name.",
+              "minLength": 1,
+              "x-suggested": ["EPYC 9654", "Xeon Platinum 8480+", "Graviton 3", "A64FX"]
+            },
+            "sku": {
+              "type": "string",
+              "description": "CPU SKU or part number.",
+              "x-suggested": ["EPYC 9654", "Xeon Platinum 8480", "Neoverse V2"]
+            },
+            "architecture": {
+              "type": "string",
+              "description": "CPU microarchitecture.",
+              "x-suggested": ["Zen 4", "Sapphire Rapids", "Ampere", "Ponte Vecchio", "Zen 3"]
+            },
+            "isa": {
+              "type": "string",
+              "description": "Instruction Set Architecture.",
+              "x-suggested": ["x86_64", "ARMv8", "ARMv9", "RISC-V", "PowerPC"]
+            },
+            "cores_per_cpu": {
+              "type": "integer",
+              "description": "Number of cores per CPU.",
+              "minimum": 1,
+              "x-suggested": [64, 96, 128, 32]
+            },
+            "threads_per_core": {
+              "type": "integer",
+              "description": "Hardware threads per core.",
+              "minimum": 1,
+              "default": 1,
+              "x-suggested": [1, 2]
+            },
+            "tdp": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Thermal Design Power (TDP) with unit.",
+              "x-suggested": [{"quantity": 280, "unit": "W"}]
+            },
+            "power_modes": {
+              "type": "array",
+              "description": "Available power modes.",
+              "items": {
+                "type": "string"
+              },
+              "x-suggested": ["Performance", "Balanced", "Power Saving"]
+            },
+            "cpu_to_cpu_link": {
+              "$ref": "#/definitions/hardware/network/Link",
+              "description": "Link between CPUs.",
+              "x-suggested": [{"type": "UPI", "bandwidth": {"quantity": 112, "unit": "GB/s"}}, {"type": "QPI", "bandwidth": {"quantity": 64, "unit": "GB/s"}}, {"type": "Infinity Fabric", "bandwidth": {"quantity": 256, "unit": "GB/s"}}]
+            },
+            "cache_hierarchy": {
+              "type": "array",
+              "description": "Cache levels (hwloc-style).",
+              "items": {
+                "$ref": "#/definitions/hardware/components/CacheLevel"
+              }
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this CPU configuration."
+            },
+            "base_frequency": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Base clock rate.",
+              "x-suggested": {"quantity": 2.4, "unit": "GHz"}
+            },
+            "max_frequency": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Max boost clock rate.",
+              "x-suggested": {"quantity": 3.7, "unit": "GHz"}
+            },
+            "number_of_sockets": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Number of this CPU type per socket (for multi-socket systems).",
+              "x-suggested": [1, 2, 4]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Additional CPU key-value pairs."
+            }
+          }
+        },
+        "Memory": {
+          "type": "object",
+          "required": ["id", "amount", "type"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this memory type.",
+              "minLength": 1,
+              "x-suggested": ["mem-ddr5-4800", "mem-hbm3-80gb", "mem-gddr6-24gb"]
+            },
+            "amount": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Memory amount with unit."
+            },
+            "type": {
+              "type": "string",
+              "description": "Memory type.",
+              "minLength": 1,
+              "x-suggested": ["DDR4-3200", "DDR5-4800", "HBM2e", "HBM3", "GDDR6"]
+            },
+            "bandwidth": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Memory bandwidth with unit.",
+              "x-suggested": {"quantity": 800, "unit": "GB/s"}
+            },
+            "memory_pieces": {
+              "type": "integer",
+              "description": "Number of DIMMs, Stacks, etc.",
+              "x-suggested": [48, 16, 8, 32]
+            },
+            "memory_channels": {
+              "type": "integer",
+              "description": "Number of memory channels.",
+              "x-suggested": [8, 6, 4, 1]
+            },
+            "numa_domains": {
+              "type": "integer",
+              "description": "Number of NUMA domains.",
+              "minimum": 1,
+              "x-suggested": [1, 2, 4, 8]
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this memory configuration."
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Additional memory key-value pairs."
+            }
+          }
+        },
+        "Accelerator": {
+          "type": "object",
+          "required": ["id", "kind", "manufacturer", "name", "count_per_node", "memory"],
+          "description": "Details of accelerator. Data per accelerator, not accumulated.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this accelerator type.",
+              "minLength": 1,
+              "x-suggested": ["acc-h100-80gb", "acc-mi300x", "acc-max1100"]
+            },
+            "kind": {
+              "type": "string",
+              "description": "Accelerator kind.",
+              "x-suggested": ["GPU", "FPGA", "ASIC", "TPU", "Neuromorphic"]
+            },
+            "manufacturer": {
+              "type": "string",
+              "description": "Accelerator manufacturer.",
+              "x-suggested": ["NVIDIA", "AMD", "Intel", "Xilinx", "Cerebras", "Graphcore"]
+            },
+            "name": {
+              "type": "string",
+              "description": "Model name.",
+              "minLength": 1,
+              "x-suggested": ["A100-SXM4-40GB", "MI250X", "Max 1100", "Stratix 10"]
+            },
+            "sku": {
+              "type": "string",
+              "description": "SKU or part number.",
+              "x-suggested": ["H100", "MI300X", "Max 1100"]
+            },
+            "architecture": {
+              "type": "string",
+              "description": "Accelerator microarchitecture.",
+              "x-suggested": ["Ampere", "Hopper", "CDNA2", "Ponte Vecchio", "Arcturus"]
+            },
+            "isa": {
+              "type": "string",
+              "description": "Instruction Set Architecture or programming model.",
+              "x-suggested": ["CUDA", "ROCm", "oneAPI", "OpenCL", "SYCL"]
+            },
+            "count_per_node": {
+              "type": "integer",
+              "description": "Number of accelerators per node.",
+              "minimum": 1,
+              "x-suggested": [1, 2, 4, 8]
+            },
+            "memory": {
+              "$ref": "#/definitions/hardware/components/Memory",
+              "description": "Accelerator memory specification."
+            },
+            "tdp": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Thermal Design Power (TDP) with unit.",
+              "x-suggested": [{"quantity": 300, "unit": "W"}]
+            },
+            "power_modes": {
+              "type": "array",
+              "description": "Available power modes.",
+              "items": {
+                "type": "string"
+              },
+              "x-suggested": ["Performance", "Balanced", "Power Saving"]
+            },
+            "cpu_to_accelerator_link": {
+              "$ref": "#/definitions/hardware/network/Link",
+              "description": "Link between CPU and accelerator.",
+              "x-suggested": [{"type": "PCIe 5.0 x16", "bandwidth": {"quantity": 64, "unit": "GB/s"}}, {"type": "NVLink 4", "bandwidth": {"quantity": 900, "unit": "GB/s"}}]
+            },
+            "accelerator_to_accelerator_link": {
+              "$ref": "#/definitions/hardware/network/Link",
+              "description": "Link between accelerators.",
+              "x-suggested": [{"type": "NVLink 4", "bandwidth": {"quantity": 900, "unit": "GB/s"}}, {"type": "Infinity Fabric", "bandwidth": {"quantity": 256, "unit": "GB/s"}}]
+            },
+            "cache_hierarchy": {
+              "type": "array",
+              "description": "Cache levels (hwloc-style, L1, L2, Shared for GPUs).",
+              "items": {
+                "$ref": "#/definitions/hardware/components/CacheLevel"
+              }
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this accelerator."
+            },
+            "cores": {
+              "type": "integer",
+              "description": "Number of accelerator cores.",
+              "x-suggested": [5120, 6912, 1376, 1024]
+            },
+            "clock_rate": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Clock rate.",
+              "x-suggested": {"quantity": 1.5, "unit": "GHz"}
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Additional accelerator key-value pairs."
+            }
+          }
+        },
+        "CacheLevel": {
+          "type": "object",
+          "required": ["id", "level_name", "cache_type", "size"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this cache level.",
+              "minLength": 1,
+              "x-suggested": ["cache-l1-data", "cache-l2-unified", "cache-l3-llc"]
+            },
+            "level_name": {
+              "type": "string",
+              "description": "Cache level name.",
+              "minLength": 1,
+              "x-suggested": ["L1", "L2", "L3", "LLC"]
+            },
+            "cache_type": {
+              "type": "string",
+              "description": "Cache type.",
+              "x-suggested": ["instruction", "data", "unified"]
+            },
+            "size": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Cache size with unit.",
+              "x-suggested": {"quantity": 2, "unit": "MB"}
+            },
+            "associativity": {
+              "type": "string",
+              "description": "Cache associativity.",
+              "x-suggested": ["8-way", "16-way", "32-way", "direct-mapped", "fully-associative"]
+            },
+            "line_size": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Cache line size with unit.",
+              "x-suggested": {"quantity": 128, "unit": "B"}
+            },
+            "instances_per_cpu": {
+              "type": "integer",
+              "description": "Number of cache instances per CPU.",
+              "minimum": 1,
+              "x-suggested": [1, 2, 4, 8]
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this cache level.",
+              "x-suggested": ["Private L1", "Shared L3", "Last-level cache"]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Additional cache key-value pairs."
+            }
+          }
+        },
+        "NumaDomain": {
+          "type": "object",
+          "required": ["id", "domain_id", "memory_size"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this NUMA domain.",
+              "minLength": 1,
+              "x-suggested": ["numa-domain-0", "numa-domain-1", "numa-socket0"]
+            },
+            "domain_id": {
+              "type": "integer",
+              "description": "NUMA domain ID.",
+              "minimum": 0,
+              "x-suggested": [0, 1, 2, 3]
+            },
+            "memory_size": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Memory size with unit.",
+              "x-suggested": {"quantity": 5, "unit": "GB"}
+            },
+            "associated_cpus": {
+              "type": "array",
+              "description": "List of CPU IDs belonging to this NUMA domain.",
+              "items": {
+                "type": "integer"
+              },
+              "x-suggested": [0, 1, 2, 3, 4, 5, 6]
+            },
+            "distance_matrix": {
+              "type": "object",
+              "description": "Distances to other NUMA domains (keyed by domain ID).",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "associated_accelerators": {
+              "type": "array",
+              "description": "List of accelerator IDs associated with this NUMA domain.",
+              "items": {
+                "type": "integer"
+              },
+              "x-suggested": [0, 1]
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this NUMA domain.",
+              "x-suggested": ["NUMA Node 0", "NUMA Node 1", "Socket 0 Domain"]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Additional NUMA key-value pairs."
+            }
+          }
+        }
+      },
+      "network": {
+        "NetworkAdapter": {
+          "type": "object",
+          "required": ["id", "type"],
+          "description": "Details of adapter. Data per adapter, not accumulated.",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this network adapter type.",
+              "minLength": 1,
+              "x-suggested": ["net-hpe-slingshot", "net-mlx-ndr", "net-cisco-200g"]
+            },
+            "type": {
+              "type": "string",
+              "description": "Interconnect type.",
+              "minLength": 1,
+              "x-suggested": ["HPE Slingshot-11", "InfiniBand NDR", "InfiniBand HDR", "Ethernet 200GbE"]
+            },
+            "manufacturer": {
+              "type": "string",
+              "description": "Manufacturer.",
+              "x-suggested": ["HPE", "Mellanox", "NVIDIA", "Cisco"]
+            },
+            "model": {
+              "type": "string",
+              "description": "SKU or model.",
+              "x-suggested": ["SL-11-200G-Adapter", "ConnectX-6 Dx", "BlueField-3"]
+            },
+            "adapters_per_node": {
+              "type": "integer",
+              "description": "Number of interconnect adapters per node.",
+              "minimum": 1,
+              "default": 1,
+              "x-suggested": [1, 2, 4]
+            },
+            "adapter_to_switch_link": {
+              "$ref": "#/definitions/hardware/network/Link",
+              "description": "Link between adapter and switch(/other adapter), including bandwidth."
+            },
+            "cpu_to_network_link": {
+              "$ref": "#/definitions/hardware/network/Link",
+              "description": "Link between CPU and network adapter, including bandwidth."
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            },
+            "comment": {
+              "type": "string",
+              "description": "Free-text comment."
+            }
+          }
+        },
+        "GlobalNetwork": {
+          "type": "object",
+          "required": ["id", "name", "type", "bandwidth"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this network.",
+              "minLength": 1,
+              "x-suggested": ["net-hs-001", "net-admin-001", "net-storage-001"]
+            },
+            "name": {
+              "type": "string",
+              "description": "Name of this network component",
+              "minLength": 1,
+              "x-suggested": ["Admin network", "High-Speed Network", "IB net"]
+            },
+            "type": {
+              "type": "string",
+              "description": "Interconnect type.",
+              "minLength": 1,
+              "x-suggested": ["HPE Slingshot-11", "InfiniBand NDR", "InfiniBand HDR", "Ethernet 200GbE"]
+            },
+            "manufacturer": {
+              "type": "string",
+              "description": "Manufacturer.",
+              "x-suggested": ["HPE", "Mellanox", "NVIDIA", "Cisco"]
+            },
+            "sku": {
+              "type": "string",
+              "description": "SKU or model number.",
+              "x-suggested": ["SL-11-200G", "IB-NDR-400G", "ETH-200G"]
+            },
+            "adapters_per_node": {
+              "type": "integer",
+              "description": "Number of interconnect adapters per node.",
+              "minimum": 1,
+              "default": 1,
+              "x-suggested": [1, 2, 4]
+            },
+            "topology": {
+              "type": "string",
+              "description": "Network topology.",
+              "x-suggested": ["Dragonfly+", "Fat Tree", "Torus", "Mesh", "Hybrid"]
+            },
+            "topology_parts": {
+              "type": "array",
+              "description": "Detailed information about each topology component, one or more.",
+              "items": {
+                "$ref": "#/definitions/hardware/network/TopologyPart"
+              }
+            },
+            "bisection_bandwidth": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Bisection bandwidth of this component with unit.",
+              "x-suggested": {"quantity": 1.2, "unit": "PB/s"}
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this interconnect.",
+              "x-suggested": ["Primary high-speed network", "Management network", "Storage network"]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        },
+        "TopologyPart": {
+          "type": "object",
+          "required": ["id", "name", "bandwidth_per_link"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this topology component.",
+              "minLength": 1,
+              "x-suggested": ["top-rack-001", "top-group-001", "top-dragonfly-001"]
+            },
+            "name": {
+              "type": "string",
+              "description": "Name of this network component",
+              "minLength": 1,
+              "x-suggested": ["Rack-local network", "Global network", "Dragonfly+ Group"]
+            },
+            "bandwidth_per_link": {
+              "$ref": "#/definitions/hardware/network/Link",
+              "description": "Bandwidth of links within this component.",
+              "x-suggested": {"quantity": 200, "unit": "Gb/s"}
+            },
+            "rail_type": {
+              "type": "string",
+              "description": "Rail Type.",
+              "x-suggested": ["Full Rail", "Partial Rail", "Optimized Rail"]
+            },
+            "total_links": {
+              "type": "integer",
+              "description": "Total number of available links.",
+              "x-suggested": [100, 1000]
+            },
+            "bisection_bandwidth": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Bisection bandwidth of this component with unit.",
+              "x-suggested": {"quantity": 1.9, "unit": "TB/s"}
+            },
+            "total_switches": {
+              "type": "integer",
+              "description": "Total number of switches in this component.",
+              "x-suggested": [1000]
+            },
+            "features": {
+              "type": "array",
+              "description": "Available features.",
+              "items": {
+                "type": "string"
+              },
+              "x-suggested": ["Adaptive Routing", "SHARP"]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            },
+            "comment": {
+              "type": "string",
+              "description": "Free-text comment."
+            }
+          }
+        },
+        "Link": {
+          "type": "object",
+          "required": ["id", "type", "bandwidth"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this link type.",
+              "minLength": 1,
+              "x-suggested": ["link-pcie5-x16", "link-nvlink4", "link-infinity-fabric"]
+            },
+            "type": {
+              "type": "string",
+              "description": "Link type.",
+              "minLength": 1,
+              "x-suggested": ["PCIe 5.0 x16", "PCIe 4.0 x16", "NVLink 4.0", "Infinity Fabric", "CXL 2.0"]
+            },
+            "bandwidth": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Link bandwidth with unit.",
+              "x-suggested": {"quantity": 200, "unit": "Gb/s"}
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this link."
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Additional link key-value pairs."
+            }
+          }
+        }
+      },
+      "storage": {
+        "Storage": {
+          "type": "object",
+          "required": ["id", "name", "type"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "Unique identifier for this storage type.",
+              "minLength": 1,
+              "x-suggested": ["stor-nvme-001", "stor-lustre-001", "stor-ssd-local"]
+            },
+            "name": {
+              "type": "string",
+              "description": "Storage name.",
+              "minLength": 1,
+              "x-suggested": ["ParFi", "ExaJUST"]
+            },
+            "type": {
+              "type": "string",
+              "description": "Storage type.",
+              "minLength": 1,
+              "x-suggested": ["NVMe", "NVMe-oF", "SATA SSD", "SAS SSD", "HDD", "Lustre", "GPFS"]
+            },
+            "manufacturer": {
+              "type": "string",
+              "description": "Manufacturer.",
+              "x-suggested": ["IBM", "Weka", "VAST"]
+            },
+            "product_name": {
+              "type": "string",
+              "description": "Product name.",
+              "x-suggested": ["Super Store 3000"]
+            },
+            "amount_per_node": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Storage per node with unit.",
+              "x-suggested": {"quantity": 3, "unit": "PB"}
+            },
+            "total_amount": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Total storage with unit.",
+              "x-suggested": {"quantity": 30, "unit": "PB"}
+            },
+            "bandwidth": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Storage bandwidth with unit.",
+              "x-suggested": {"quantity": 2.1, "unit": "TB/s"}
+            },
+            "blocksize": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Storage blocksize with unit.",
+              "x-suggested": {"quantity": 4, "unit": "MB"}
+            },
+            "iops": {
+              "type": "integer",
+              "description": "I/O operations per second.",
+              "x-suggested": [100000, 500000, 1000000]
+            },
+            "cpu_to_storage_link": {
+              "$ref": "#/definitions/hardware/network/Link",
+              "description": "Link between CPU and storage."
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this storage configuration.",
+              "x-suggested": ["Local NVMe cache", "Parallel filesystem", "Archive storage"]
+            },
+            "storage_role": {
+              "type": "string",
+              "description": "Storage role.",
+              "x-suggested": ["local", "parallel", "archive", "home", "scratch", "boot", "checkpoint"]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        }
+      },
+      "Cooling": {
+        "type": "object",
+        "description": "Cooling infrastructure specification.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Cooling type.",
+            "minLength": 1,
+            "x-suggested": ["liquid", "DLC", "air", "immersion"]
+          },
+          "capacity": {
+            "$ref": "#/definitions/common/units/QuantityWithUnit",
+            "description": "Cooling capacity with unit.",
+            "x-suggested": {"quantity": 20, "unit": "MW"}
+          },
+          "efficiency": {
+            "type": "number",
+            "description": "Cooling efficiency (e.g., PUE, COP).",
+            "minimum": 0,
+            "x-suggested": [1.05]
+          },
+          "comment": {
+            "type": "string",
+            "description": "Optional comment or notes about cooling.",
+            "x-suggested": ["Direct-to-chip liquid cooling", "Rear door heat exchangers", "Immersion cooling tank"]
+          },
+          "further_metadata": {
+            "$ref": "#/definitions/common/FurtherMetadata",
+            "description": "Free-form key-value metadata."
+          }
+        }
+      },
+      "PhysicalLocation": {
+        "type": "object",
+        "description": "Physical location specification for a part.",
+        "properties": {
+          "site": {
+            "type": "string",
+            "description": "Site or campus name.",
+            "minLength": 1,
+            "x-suggested": ["Jülich", "Berkeley", "Oak Ridge", "Edinburgh"]
+          },
+          "datacenter": {
+            "type": "string",
+            "description": "Datacenter name or code.",
+            "minLength": 1,
+            "x-suggested": ["North", "South", "DC1", "Building A"]
+          },
+          "hall": {
+            "type": "string",
+            "description": "Hall or building section.",
+            "x-suggested": ["Hall 1", "Hall 2", "Main Hall"]
+          },
+          "row": {
+            "type": "string",
+            "description": "Rack row identifier.",
+            "x-suggested": ["Row A", "Row B", "Row 1", "Row 2"]
+          },
+          "rack": {
+            "type": "string",
+            "description": "Rack identifier.",
+            "x-suggested": ["R001", "R002", "A1", "B5"]
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit or U position in rack.",
+            "x-suggested": ["U1-U42", "U10-U20", "Top", "Bottom"]
+          },
+          "comment": {
+            "type": "string",
+            "description": "Optional comment or notes about location.",
+            "x-suggested": ["Main compute hall", "GPU partition area", "Storage cluster"]
+          },
+          "further_metadata": {
+            "$ref": "#/definitions/common/FurtherMetadata",
+            "description": "Free-form key-value metadata."
+          }
+        }
+      }
+    },
+    "software": {
+      "stack": {
+        "SoftwareStack": {
+          "type": "object",
+          "description": "Software environment stack.",
+          "required": ["system_software"],
+          "properties": {
+            "system_software": {
+              "$ref": "#/definitions/software/system/SystemSoftware",
+              "description": "System-level software (OS, kernel, firmware)."
+            },
+            "user_software": {
+              "$ref": "#/definitions/software/user/UserSoftware",
+              "description": "User-level software (compilers, MPIs, libraries)."
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about the software stack.",
+              "x-suggested": ["Full software stack", "HPC environment", "AI/ML stack"]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        }
+      },
+      "system": {
+        "SystemSoftware": {
+          "type": "object",
+          "required": ["operating_system"],
+          "properties": {
+            "operating_system": {
+              "$ref": "#/definitions/software/types/OSVersion",
+              "description": "Operating system information."
+            },
+            "kernel_version": {
+              "type": "string",
+              "description": "Kernel version.",
+              "x-suggested": ["5.15.0-56-generic", "4.18.0-348.el8", "5.14.0-362.8.1"]
+            },
+            "firmware_versions": {
+              "type": "array",
+              "description": "Firmware versions for various components.",
+              "items": {
+                "$ref": "#/definitions/software/types/FirmwareVersion"
+              }
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about system software."
+            },
+            "scheduler": {
+              "$ref": "#/definitions/software/types/Scheduler",
+              "description": "Job scheduler (optional)."
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        }
+      },
+      "user": {
+        "UserSoftware": {
+          "type": "object",
+          "properties": {
+            "compilers": {
+              "type": "array",
+              "description": "Available compilers.",
+              "items": {
+                "$ref": "#/definitions/software/types/SoftwarePackage"
+              }
+            },
+            "libc_version": {
+              "type": "string",
+              "description": "C library version."
+            },
+            "mpis": {
+              "type": "array",
+              "description": "MPI implementations.",
+              "items": {
+                "$ref": "#/definitions/software/types/SoftwarePackage"
+              }
+            },
+            "blas": {
+              "type": "array",
+              "description": "BLAS libraries.",
+              "items": {
+                "$ref": "#/definitions/software/types/SoftwarePackage"
+              }
+            },
+            "libraries": {
+              "type": "array",
+              "description": "Key libraries.",
+              "items": {
+                "$ref": "#/definitions/software/types/SoftwarePackage"
+              }
+            },
+            "other": {
+              "type": "object",
+              "description": "Other software components.",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about user software."
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        }
+      },
+      "types": {
+        "SoftwarePackage": {
+          "type": "object",
+          "required": ["name", "version"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Package name.",
+              "minLength": 1,
+              "x-suggested": ["GCC", "Intel OneAPI", "OpenMPI", "HPE Cray MPICH", "CUDA"]
+            },
+            "version": {
+              "type": "string",
+              "description": "Version string.",
+              "minLength": 1,
+              "x-suggested": ["12.2.0", "2023.2", "4.1.5", "8.1.25"]
+            },
+            "variant": {
+              "type": "string",
+              "description": "Variant or build options.",
+              "x-suggested": ["system", "module", "container", "source", "intel", "gnu", "cuda"]
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this software package.",
+              "x-suggested": ["Default compiler suite", "MPI implementation", "Math libraries"]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        },
+        "OSVersion": {
+          "type": "object",
+          "required": ["type", "version"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "OS type.",
+              "minLength": 1,
+              "x-suggested": ["Linux", "Windows", "FreeBSD", "AIX", "CNK"]
+            },
+            "flavor": {
+              "type": "string",
+              "description": "OS distribution/flavor.",
+              "x-suggested": ["RHEL", "Ubuntu", "SLES", "Rocky", "Debian", "CoreOS"]
+            },
+            "version": {
+              "type": "string",
+              "description": "OS version.",
+              "minLength": 1,
+              "x-suggested": ["8.6", "22.04", "15.3", "9.0"]
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this OS."
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        },
+        "FirmwareVersion": {
+          "type": "object",
+          "required": ["component", "version"],
+          "properties": {
+            "component": {
+              "type": "string",
+              "description": "Component name.",
+              "minLength": 1,
+              "x-suggested": ["BIOS", "BMC", "NIC", "GPU", "CXL", "FPGA"]
+            },
+            "version": {
+              "type": "string",
+              "description": "Firmware version string.",
+              "minLength": 1,
+              "x-suggested": ["2.14.0", "2.80.00", "24.38.4000"]
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this firmware."
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        },
+        "Scheduler": {
+          "type": "object",
+          "required": ["name", "version"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Scheduler name.",
+              "x-suggested": ["Slurm", "PBS Pro", "LSF", "Torque", "Flux"]
+            },
+            "version": {
+              "type": "string",
+              "description": "Scheduler version.",
+              "x-suggested": ["22.05.9", "20.11.7", "10.1.0"]
+            },
+            "comment": {
+              "type": "string"
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form key-value metadata."
+            }
+          }
+        }
+      }
+    },
+    "common": {
+      "units": {
+        "QuantityWithUnit": {
+          "type": "object",
+          "required": ["quantity", "unit"],
+          "properties": {
+            "quantity": {
+              "type": "number",
+              "description": "Numeric value."
+            },
+            "unit": {
+              "type": "string",
+              "description": "Unit of measurement.",
+              "minLength": 1,
+              "x-suggested": ["GB", "TB", "PB", "GB/s", "Gbit/s", "W", "GHz", "MHz"]
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment or notes about this value."
+            }
+          }
+        }
+      },
+      "metadata": {},
+      "Provider": {
+        "type": "object",
+        "description": "Hosting facility / provider information.",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Provider / hosting facility name.",
+            "minLength": 1,
+            "x-suggested": ["Jülich Supercomputing Centre", "NERSC", "OLCF", "CSC"]
+          },
+          "location": {
+            "type": "string",
+            "description": "Physical location of the provider.",
+            "x-suggested": ["Jülich, Germany", "Berkeley, CA", "Oak Ridge, TN", "Espoo, Finland"]
+          },
+          "persistent_identifier": {
+            "type": "object",
+            "description": "Persistent identifier for the provider (e.g. ROR ID).",
+            "properties": {
+              "identifier_name": {
+                "type": "string",
+                "description": "Type / name of the identifier (ROR, etc.)"
+              },
+              "id": {
+                "type": "string",
+                "description": "Value of identifier (the actual ID)"
+              }
+            },
+            "x-suggested": [{"ror": "05a28rw58"}]
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "description": "Provider website URL.",
+            "x-suggested": ["https://www.fz-juelich.de/jsc", "https://www.nersc.gov", "https://www.olcf.ornl.gov"]
+          },
+          "further_metadata": {
+            "$ref": "#/definitions/common/FurtherMetadata",
+            "description": "Free-form key-value metadata."
+          },
+          "comment": {
+            "type": "string",
+            "description": "Free-text comment."
+          }
+        }
+      },
+      "FurtherMetadata": {
+        "type": "object",
+        "description": "Free-form key-value metadata for extensibility.",
+        "additionalProperties": {}
+      }
+    }
+  },
+  "x-schema-metadata": {
+    "schema_version": "0.5.0",
+    "version_scheme": "semver",
+    "deprecated": false,
+    "deprecation_notice": null,
+    "migration_guide": null,
+    "compatibility": {
+      "min_schema_version": "0.5.0",
+      "max_schema_version": "0.x.x"
+    },
+    "changelog": [
+      {
+        "version": "0.5.0",
+        "date": "2026-08-04",
+        "changes": [
+          "Initial schema release with semantic versioning",
+          "Added x-suggested examples for all fields",
+          "Separated system and user software",
+          "Added scheduler support",
+          "Added CPU and GPU clock rate fields"
+        ]
+      }
+    ]
+  }
+}

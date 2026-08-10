@@ -1,0 +1,84 @@
+{
+  "schema_version": "0.5.0",
+  "version": "1.0.0",
+  "name": "El Capitan",
+  "provider": {
+    "name": "Lawrence Livermore National Laboratory",
+    "location": "Livermore, California, USA",
+    "website": "https://www.llnl.gov"
+  },
+  "location": "Livermore, California, USA",
+  "installed_at": "2024-06-01T00:00:00Z",
+  "website": "https://hpc.llnl.gov/hardware/platforms/el-capitan",
+  "comment": "El Capitan is a HPE Cray EX exascale supercomputer at LLNL. 43,808 compute nodes, each with a single AMD Instinct MI300A APU (24 Zen 4 CPU cores + 228 CDNA 3 compute units + 128 GB HBM3). TBD: exact installation date not publicly documented; system first ranked #1 on TOP500 in November 2024 (1.742 EFLOPS HPL, 2.746 EFLOPS peak). Source: https://hpc.llnl.gov/hardware/platforms/el-capitan",
+  "parts": [
+    {
+      "id": "part-el-capitan-compute",
+      "name": "El Capitan Compute Partition",
+      "provider": "HPE",
+      "product_name": "HPE Cray EX",
+      "installed_at": "2024-06-01T00:00:00Z",
+      "part_type": "compute",
+      "node_count": 11520,
+      "power_draw_peak": {
+        "quantity": 29.6,
+        "unit": "MW",
+        "comment": "approximate; ~30 MW reported for the full system (TOP500 November 2024 entry)"
+      },
+      "physical_location": {
+        "site": "Lawrence Livermore National Laboratory",
+        "datacenter": "Livermore Computing (LC)"
+      },
+      "node_types": [
+        {
+          "id": "nd-el-capitan-standard",
+          "node_type_name": "standard compute node",
+          "node_count": 11424,
+          "cpus": [
+            {
+              "id": "cpu-el-capitan-mi300a",
+              "manufacturer": "AMD",
+              "name": "Instinct MI300A (Zen 4 chiplets)",
+              "sku": "MI300A",
+              "architecture": "Zen 4",
+              "isa": "x86-64",
+              "cores_per_cpu": 24,
+              "threads_per_core": 2,
+              "number_of_sockets": 4
+            }
+          ],
+          "memory": [
+            {
+              "id": "mem-el-capitan-hbm3",
+              "amount": {
+                "quantity": 128,
+                "unit": "GB"
+              },
+              "type": "HBM3",
+              "bandwidth": {
+                "quantity": 5.3,
+                "unit": "TB/s",
+                "comment": "unified HBM3 bandwidth of the MI300A APU"
+              },
+              "comment": "Unified APU memory of the MI300A (El Capitan nodes have no separate DDR5 DIMMs). Source: https://hpc.llnl.gov/hardware/platforms/el-capitan"
+            }
+          ],
+          "accelerators": [
+            {
+              "id": "acc-el-capitan-mi300a",
+              "kind": "GPU",
+              "manufacturer": "AMD",
+              "name": "Instinct MI300A APU",
+              "sku": "MI300A",
+              "architecture": "CDNA 3",
+              "isa": "ROCm",
+              "count_per_node": 4,
+              "cores": 228,
+              "comment": "MI300A is an APU: the 24 Zen 4 CPU cores and 228 CDNA 3 compute units share one package with 128 GB of unified HBM3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

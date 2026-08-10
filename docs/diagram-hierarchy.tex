@@ -1,0 +1,119 @@
+\documentclass[border=12pt]{standalone}
+\usepackage{tikz}
+\usetikzlibrary{positioning, fit, calc}
+
+\begin{document}
+\newlength{\basewidth}
+\setlength{\basewidth}{16cm}
+\begin{tikzpicture}[
+    font=\sffamily\small,
+    % ── styles ──
+    contain/.style={draw, rounded corners=6pt, inner sep=12pt, line width=0.7pt},
+    leaf/.style={draw, rounded corners=4pt, minimum width=2.0cm, minimum height=0.9cm,
+                 align=center, inner sep=4pt},
+    phantom/.style={fill opacity=0.6, dashed},
+    ellipsis/.style={font=\sffamily\scriptsize\itshape, text=gray!60},
+    % ── colors ──
+    syscol/.style={contain, fill=blue!4, draw=blue!50!black},
+    partcol/.style={contain, fill=green!5, draw=green!50!black},
+    ntcol/.style={contain, fill=brown!6, draw=brown!50!black},
+    cpucol/.style={contain, fill=yellow!8, draw=yellow!60!black},
+    acccol/.style={contain, fill=purple!6, draw=purple!50!black},
+    memcol/.style={contain, fill=blue!6, draw=blue!50!black},
+    leafcol/.style={leaf, fill=red!8, draw=red!50!black},
+]
+
+% ================================================================
+%  SYSTEM (outermost container)
+% ================================================================
+\node[syscol, minimum width=\basewidth, minimum height=0.65\basewidth] (system) {};
+\node[anchor=north west, font=\sffamily\bfseries\large, text=blue!50!black]
+    at (system.north west) {\quad System};
+
+% ================================================================
+%  PART 1
+% ================================================================
+\node[partcol, minimum width=0.9\basewidth,, minimum height=0.46\basewidth,,
+      below=0.8cm of system.north, anchor=north] (part1) {};
+\node[anchor=north west, font=\sffamily\bfseries, text=green!50!black]
+    at (part1.north west) {\quad Part 1};
+
+% ── Part N (phantom) ──
+\node[partcol, phantom, minimum width=0.9\basewidth,  minimum height=0.05\basewidth,
+      below=0.02\basewidth of part1.south, anchor=north] (part2) {};
+\node[anchor=north west,phantom,  font=\sffamily\bfseries, text=green!50!black]
+    at (part2.north west) {\quad Part 2};
+
+
+\node[leafcol, minimum width=0.9\basewidth,
+      below=0.02\basewidth of part2.south, anchor=north, minimum height=2mm] {\dots};
+
+% ================================================================
+%  NODE TYPE 1  (inside Part 1)
+% ================================================================
+\node[ntcol, minimum width=0.8125\basewidth, minimum height=0.3\basewidth,
+      below=0.6cm of part1.north, anchor=north] (nt1) {};
+\node[anchor=north west, font=\sffamily\bfseries, text=brown!50!black]
+    at (nt1.north west) {\quad Node Type 1};
+\node[leafcol, minimum width=0.74\basewidth,
+      below=0.265\basewidth of nt1.north, anchor=north, minimum height=2mm] {\dots};
+
+% ── Node Type N (phantom) ──
+\node[ntcol, phantom, minimum width=0.8125\basewidth, minimum height=0.05\basewidth,
+      below=0.25cm of nt1.south, anchor=north] (ntN) {};
+\node[anchor=north west, phantom, font=\sffamily\bfseries, text=brown!50!black]
+    at (ntN.north west) {\quad Node Type 2};
+
+\node[leafcol, minimum width=0.8125\basewidth,
+      above=0.25cm of part1.south, anchor=south, minimum height=2mm] {\dots};
+
+% ================================================================
+%  CPU  (inside Node Type)
+% ================================================================
+\node[cpucol, minimum width=0.22\basewidth, minimum height=3.4cm,
+      below right=0.6cm and 0.6cm of nt1.north west, anchor=north west] (cpu) {};
+\node[anchor=north west, font=\sffamily\bfseries, text=yellow!60!black]
+    at (cpu.north west) {\quad CPU};
+
+% ── Clock Rate (inside CPU) ──
+\node[leafcol, minimum width=3.2cm,
+      below=0.6cm of cpu.north, anchor=north] (clockRate) {Clock Rate};
+
+% ── Cache (inside CPU) ──
+\node[leafcol, minimum width=3.2cm,
+      below=0.25cm of clockRate.south, anchor=north] (cpuCache) {Cache};
+
+\node[leafcol, minimum width=3.2cm,
+      below=0.25cm of cpuCache.south, anchor=north, minimum height=2mm] {\dots};
+
+% ================================================================
+%  MEMORY  (at Node Type level, middle)
+% ================================================================
+\node[memcol, minimum width=0.22\basewidth, minimum height=1.4cm,
+      right=0.036\basewidth of cpu.north east, anchor=north west] (memory) {};
+\node[anchor=north west, font=\sffamily\bfseries, text=blue!60!black]
+    at (memory.north west) {\quad Memory};
+\node[leafcol, minimum width=3.2cm,
+      below=0.6cm of memory.north, anchor=north, minimum height=2mm] {\dots};
+
+% ================================================================
+%  ACCELERATOR  (inside Node Type)
+% ================================================================
+\node[acccol, minimum width=0.22\basewidth, minimum height=3.4cm,
+      right=0.036\basewidth of memory.north east, anchor=north west] (acc) {};
+\node[anchor=north west, font=\sffamily\bfseries, text=purple!50!black]
+    at (acc.north west) {\quad Accelerator};
+
+% ── Memory (inside Accelerator) ──
+\node[leafcol, minimum width=3.2cm,
+      below=0.6cm of acc.north, anchor=north] (accMem) {Memory};
+
+% ── TDP (inside Accelerator) ──
+\node[leafcol, minimum width=3.2cm,
+      below=0.25cm of accMem.south, anchor=north] (accTdp) {TDP};
+
+\node[leafcol, minimum width=3.2cm,
+      below=0.25cm of accTdp.south, anchor=north, minimum height=2mm]  {\dots};
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,77 @@
+{
+  "schema_version": "0.5.0",
+  "version": "1.0.0",
+  "name": "LineShine",
+  "provider": {
+    "name": "National Supercomputing Centre in Shenzhen (NSCS)",
+    "location": "Shenzhen, China",
+    "website": "https://www.nsccsz.cn/"
+  },
+  "location": "Shenzhen, China",
+  "installed_at": "2026-04-27T00:00:00Z",
+  "website": "https://www.nsccsz.cn/",
+  "comment": "LineShine (Chinese: 灵晟, pinyin: Lingsheng) is an all-CPU Chinese exascale supercomputer at NSCS Shenzhen, based on the LingKun architecture with LX2 CPUs (ARMv9, SVE+SME). Ranked #1 on TOP500 and HPCG in June 2026: 2,198.40 PFLOPS Rmax / 2,735.82 PFLOPS Rpeak (FP64), 42.22 MW, 52.07 FP64 GFLOPS/W. Unveiled 27 April 2026; deployment and completion in 1H 2026. Source: https://en.wikipedia.org/wiki/LineShine",
+  "parts": [
+    {
+      "id": "part-lineshine-compute",
+      "name": "LineShine Compute Partition",
+      "product_name": "LingKun",
+      "installed_at": "2026-04-27T00:00:00Z",
+      "part_type": "compute",
+      "node_count": 22680,
+      "comment": "22,680 compute nodes (2x LX2 each) in ~90 compute cabinets (2 frames x 16 blades x 8 nodes). Node count derived from 13,789,440 LX2 cores / 304 cores per CPU / 2 CPUs per node. System integrator not publicly disclosed (TBD). Source: https://en.wikipedia.org/wiki/LineShine",
+      "power_draw_peak": {
+        "quantity": 42.22,
+        "unit": "MW",
+        "comment": "per Wikipedia; efficiency 52.07 FP64 GFLOPS/W"
+      },
+      "physical_location": {
+        "site": "National Supercomputing Centre in Shenzhen (NSCS)"
+      },
+      "node_types": [
+        {
+          "id": "nd-lineshine-standard",
+          "node_type_name": "standard compute node",
+          "node_count": 22680,
+          "cpus": [
+            {
+              "id": "cpu-lineshine-lx2",
+              "manufacturer": "TBD",
+              "name": "LX2",
+              "sku": "LX2",
+              "architecture": "LingKun",
+              "isa": "ARMv9",
+              "cores_per_cpu": 304,
+              "threads_per_core": 1,
+              "number_of_sockets": 2,
+              "base_frequency": {
+                "quantity": 1.55,
+                "unit": "GHz"
+              },
+              "comment": "LX2: 2 compute dies x 152 ARMv9 cores (SVE+SME), up to 60.3 TFLOPS FP64 / 120.6 TFLOPS FP32 per CPU. Manufacturer not publicly disclosed (TBD). Source: https://en.wikipedia.org/wiki/LineShine"
+            }
+          ],
+          "memory": [
+            {
+              "id": "mem-lineshine-hbm",
+              "amount": {
+                "quantity": 32,
+                "unit": "GB"
+              },
+              "type": "HBM"
+            },
+            {
+              "id": "mem-lineshine-ddr5",
+              "amount": {
+                "quantity": 256,
+                "unit": "GB"
+              },
+              "type": "DDR5"
+            }
+          ],
+          "comment": "22,680 identical all-CPU nodes (no accelerators), 2x LX2 each. LingQi network: dual-plane multi-rail fat-tree, 1.6 Tb/s per node, 4 layers, single-hop latency 1.07 us, bisection bandwidth > 3.5 Pb/s. Source: https://en.wikipedia.org/wiki/LineShine"
+        }
+      ]
+    }
+  ]
+}
