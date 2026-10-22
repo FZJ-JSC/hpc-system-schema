@@ -336,7 +336,7 @@
       ],
       "node_types": [
         {
-          "inehrits_from": "node-jupiter-booster-gpu",
+          "inherits_from": "node-jupiter-booster-gpu",
           "id": "node-jupiter-login",
           "node_type_name": "JUPITER Booster Login",
           "comment": "Login node: 1× GH200 Grace-Hopper Superchip. Differences from Booster: 480 GB LPDDR5X (vs 120 GB), 384 GB/s memory bandwidth, TDP 900 W. Source: JUPITER docs",
