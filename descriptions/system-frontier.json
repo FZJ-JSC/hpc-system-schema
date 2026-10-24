@@ -83,7 +83,7 @@
                 "amount": {
                   "quantity": 128,
                   "unit": "GB",
-                  "comment": "HBM2E per GCD (compute die); 2 GCDs per MI250X = 128 GB per MI250X card"
+                  "comment": "HBM2E per accelerator card: one MI250X card comprises 2 GCDs with 64 GB each"
                 },
                 "type": "HBM2E"
               },

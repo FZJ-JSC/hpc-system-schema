@@ -83,9 +83,9 @@
               "memory": {
                 "id": "mem-frontier-mi250x",
                 "amount": {
-                  "quantity": 64,
+                  "quantity": 128,
                   "unit": "GB",
-                  "comment": "HBM2E per GCD (compute die); 2 GCDs per MI250X = 128 GB per MI250X card"
+                  "comment": "HBM2E per accelerator card: one MI250X card comprises 2 GCDs with 64 GB each"
                 },
                 "type": "HBM2E"
               },
@@ -94,8 +94,8 @@
                 "unit": "W",
                 "comment": "TBD: estimated 4× MI250X at ~140W per card; exact per-card TDP not documented in user guide"
               },
-              "cores": 2,
-              "comment": "Each MI250X has 2 Graphics Compute Dies (GCDs); the 8 GCDs per node appear as 8 separate GPUs to Slurm and ROCm. Source: https://docs.olcf.ornl.gov/systems/frontier_user_guide.html"
+              "cores": 208,
+              "comment": "Compute units of the full card. Each MI250X has 2 Graphics Compute Dies (GCDs); the 8 GCDs per node appear as 8 separate GPUs to Slurm and ROCm. Source: https://docs.olcf.ornl.gov/systems/frontier_user_guide.html"
             }
           ],
           "numa_topology": [
