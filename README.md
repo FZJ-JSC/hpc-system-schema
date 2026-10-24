@@ -24,7 +24,7 @@ The current schema version is **0.5.0**; the canonical definition is [`schema/sy
 | [`descriptions/`](descriptions/) | Example system descriptions: JUPITER (complete), plus minimal examples for Frontier, Aurora, El Capitan, MareNostrum 5 (YAML), and LineShine. |
 | [`validation/`](validation/) | Tooling to validate descriptions against the schema and to verify the schema itself. |
 | [`docs/`](docs/) | Generated schema documentation (HTML). |
-| [`sample-apps/`](sample-apps/) | Example applications built on the schema: REST API, hardware collecting tools, browser-based editor, LaTeX comparison tables. |
+| [`sample-apps/`](sample-apps/) | Example applications built on the schema: REST API, hardware collecting tools, browser-based editor, LaTeX comparison tables, system diff, procurement questionnaire. |
 
 ## Validation/Verification Quick start
 
@@ -69,6 +69,8 @@ the runner workspace and deployed to GitHub Pages on every push to `main` via
 - [`sample-apps/tex-table-compare/`](sample-apps/tex-table-compare/) — generate LaTeX comparison tables from several system descriptions.
 - [`sample-apps/api/`](sample-apps/api/) — read-only Flask REST API for browsing a system description.
 - [`sample-apps/collecting-tools/`](sample-apps/collecting-tools/) — collectors that gather hardware information from a running system (`lscpu`, `nvidia-smi`, `dmidecode`, …) and emit schema-conformant JSON.
+- [`sample-apps/system-diff/`](sample-apps/system-diff/) — field-by-field comparison of two descriptions, by position across systems or by id across versions.
+- [`sample-apps/procurement-template/`](sample-apps/procurement-template/) — tender questionnaire generated from the schema.
 
 
 ## License
