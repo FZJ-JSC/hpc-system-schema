@@ -74,7 +74,16 @@
               "isa": "ROCm",
               "count_per_node": 4,
               "cores": 228,
-              "comment": "MI300A is an APU: the 24 Zen 4 CPU cores and 228 CDNA 3 compute units share one package with 128 GB of unified HBM3"
+              "comment": "MI300A is an APU: the 24 Zen 4 CPU cores and 228 CDNA 3 compute units share one package with 128 GB of unified HBM3",
+              "memory": {
+                "id": "mem-elcapitan-mi300a",
+                "amount": {
+                  "quantity": 128,
+                  "unit": "GB",
+                  "comment": "HBM3 unified: shared by the 24 Zen 4 cores and the 228 CDNA 3 compute units"
+                },
+                "type": "HBM3"
+              }
             }
           ]
         }
