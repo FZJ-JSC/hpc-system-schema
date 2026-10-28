@@ -146,6 +146,11 @@
               "$ref": "#/definitions/hardware/storage/Storage",
               "description": "Shared/network storage system data (separate from on-node storage (for this, see below)). Add cumulative storage data here, if part is storage."
             },
+            "scheduler_partitions": {
+              "type": "array",
+              "description": "Partitions or queues the scheduler exposes for this part.",
+              "items": {"$ref": "#/definitions/hardware/system/SchedulerPartition"}
+            },
             "power_details": {
               "type": "object",
               "description": "Power consumption details (optional).",
@@ -294,6 +299,33 @@
             "further_metadata": {
               "$ref": "#/definitions/common/FurtherMetadata",
               "description": "Free-form key-value metadata."
+            }
+          }
+        },
+        "SchedulerPartition": {
+          "type": "object",
+          "description": "A partition or queue that the scheduler exposes for a part.",
+          "required": ["name"],
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Partition or queue name as the scheduler knows it.",
+              "x-suggested": ["booster", "cluster", "batch", "debug"]
+            },
+            "max_walltime": {
+              "type": "string",
+              "description": "Maximum walltime a job may request in this partition, as HH:MM:SS.",
+              "x-suggested": ["00:30:00", "24:00:00", "48:00:00", "168:00:00"]
+            },
+            "max_nodes": {
+              "type": "integer",
+              "description": "Maximum number of nodes a single job may request in this partition.",
+              "minimum": 1,
+              "x-suggested": [1, 4, 64, 1024]
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form partition metadata (QoS, accounts, ...)."
             }
           }
         }
@@ -940,6 +972,11 @@
               "description": "Optional comment or notes about this storage configuration.",
               "x-suggested": ["Local NVMe cache", "Parallel filesystem", "Archive storage"]
             },
+            "filesystems": {
+              "type": "array",
+              "description": "File systems this storage system provides.",
+              "items": {"$ref": "#/definitions/hardware/storage/FileSystem"}
+            },
             "storage_role": {
               "type": "string",
               "description": "Storage role.",
@@ -948,6 +985,57 @@
             "further_metadata": {
               "$ref": "#/definitions/common/FurtherMetadata",
               "description": "Free-form key-value metadata."
+            }
+          }
+        },
+        "FileSystem": {
+          "type": "object",
+          "description": "A file system as offered to the users of a system.",
+          "required": ["mount_points"],
+          "properties": {
+            "mount_points": {
+              "type": "array",
+              "items": {"type": "string"},
+              "minItems": 1,
+              "description": "Paths at which this file system is mounted.",
+              "x-suggested": ["/e/scratch", "/p/home", "/p/arch1"]
+            },
+            "role": {
+              "type": "string",
+              "description": "Role of the file system.",
+              "x-suggested": ["home", "scratch", "project", "data", "archive", "checkpoint", "local"]
+            },
+            "usable_amount": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Usable capacity.",
+              "x-suggested": [{"quantity": 65, "unit": "TB"}, {"quantity": 11, "unit": "PB"}]
+            },
+            "blocksize": {
+              "$ref": "#/definitions/common/units/QuantityWithUnit",
+              "description": "Block size.",
+              "x-suggested": [{"quantity": 1, "unit": "MB"}, {"quantity": 8, "unit": "MB"}]
+            },
+            "backup": {
+              "type": "string",
+              "description": "Backup regime.",
+              "x-suggested": ["none", "snapshot", "tape", "snapshot and tape"]
+            },
+            "access": {
+              "type": "string",
+              "description": "From where the file system is mounted.",
+              "x-suggested": ["login and compute", "login only", "compute only"]
+            },
+            "retention": {
+              "type": "string",
+              "description": "Deletion or migration policy.",
+              "x-suggested": ["kept until deleted", "auto-deleted after 30 days"]
+            },
+            "comment": {
+              "type": "string"
+            },
+            "further_metadata": {
+              "$ref": "#/definitions/common/FurtherMetadata",
+              "description": "Free-form metadata (site-specific names, environment variables, ...)."
             }
           }
         }
