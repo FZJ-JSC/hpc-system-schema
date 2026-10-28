@@ -30,6 +30,28 @@
       ],
       "part_type": "compute",
       "node_count": 5884,
+      "x-secret": {"node_count": "private"},
+      "x-secret-alternative-value": {"node_count": 6000},
+      "scheduler_partitions": [
+        {
+          "name": "booster",
+          "max_walltime": "12:00:00",
+          "max_nodes": 2048,
+          "further_metadata": {
+            "qos": "normal",
+            "note": "Walltime limit of 12 h is inherited from the normal QoS, not set on the partition."
+          }
+        },
+        {
+          "name": "largebooster",
+          "max_walltime": "12:00:00",
+          "max_nodes": 5884,
+          "further_metadata": {
+            "min_nodes": 480,
+            "note": "Large jobs only: requires at least 480 nodes. Walltime is 12 h at the time of writing."
+          }
+        }
+      ],
       "power_draw_peak": {
         "quantity": 17,
         "unit": "MW"
@@ -438,8 +460,114 @@
           "quantity": 40,
           "unit": "PB",
           "comment": "Net capacity"
-        }
-      },
+        },
+          "filesystems": [
+            {
+              "mount_points": ["/e/home"],
+
+              "x-secret": {"mount_points": "private"},
+              "role": "home",
+              "usable_amount": {
+                "quantity": 65,
+                "unit": "TB"
+              },
+              "blocksize": {
+                "quantity": 1,
+                "unit": "MB"
+              },
+              "backup": "ISP (tape)",
+              "access": "login + compute",
+              "comment": "User home directory on GPFS",
+              "further_metadata": {
+                "variable": "$HOME / $EXAHOME"
+              }
+            },
+            {
+              "mount_points": ["/e/scratch"],
+
+              "x-secret": {"mount_points": "private"},
+              "role": "scratch",
+              "usable_amount": {
+                "quantity": 11,
+                "unit": "PB"
+              },
+              "blocksize": {
+                "quantity": 8,
+                "unit": "MB"
+              },
+              "backup": "No",
+              "access": "login + compute",
+              "retention": "Files auto-deleted after 90 days; empty dirs after 3 days",
+              "comment": "Standard scratch for bandwidth-intensive workloads",
+              "further_metadata": {
+                "variable": "$SCRATCH / $EXASCRATCH"
+              }
+            },
+            {
+              "mount_points": ["/e/project1"],
+
+              "x-secret": {"mount_points": "private"},
+              "role": "project",
+              "usable_amount": {
+                "quantity": 5.1,
+                "unit": "PB"
+              },
+              "blocksize": {
+                "quantity": 4,
+                "unit": "MB"
+              },
+              "backup": "ISP (tape)",
+              "access": "login + compute",
+              "comment": "Project directory for source code, binaries, libraries",
+              "further_metadata": {
+                "variable": "$PROJECT / $EXAPROJECT"
+              }
+            },
+            {
+              "mount_points": ["/e/data1"],
+
+              "x-secret": {"mount_points": "private"},
+              "role": "data",
+              "usable_amount": {
+                "quantity": 21,
+                "unit": "PB"
+              },
+              "blocksize": {
+                "quantity": 8,
+                "unit": "MB"
+              },
+              "backup": "Snapshot + ISP (tape)",
+              "access": "login + compute",
+              "comment": "Large-scale data project storage",
+              "further_metadata": {
+                "variable": "$DATA / $EXADATA"
+              }
+            },
+            {
+              "mount_points": [
+                "/p/arch1",
+                "/p/arch2"
+              ],
+
+              "x-secret": {"mount_points": "private"},
+              "role": "archive",
+              "usable_amount": {
+                "quantity": 2.8,
+                "unit": "PB"
+              },
+              "blocksize": {
+                "quantity": 2,
+                "unit": "MB"
+              },
+              "backup": "ISP-HSM (tape)",
+              "access": "login only",
+              "comment": "Long-term archive; data migrated to tape via ISP-HSM",
+              "further_metadata": {
+                "variable": "$ARCHIVE / $JUSTARCHIVE"
+              }
+            }
+          ]
+        },
       "network": [
         {
           "id": "net-jupiter-storage-ib",
@@ -456,49 +584,6 @@
         }
       ],
       "further_metadata": {
-        "filesystems": [
-          {
-            "variable": "$HOME / $EXAHOME",
-            "usable_space": "65 TB",
-            "blocksize": "1 MB",
-            "description": "User home directory on GPFS",
-            "backup": "ISP (tape)",
-            "accessibility": "Login + Compute"
-          },
-          {
-            "variable": "$SCRATCH / $EXASCRATCH",
-            "usable_space": "11 PB",
-            "blocksize": "8 MB",
-            "description": "Standard scratch for bandwidth-intensive workloads",
-            "backup": "No",
-            "accessibility": "Login + Compute",
-            "retention": "Files auto-deleted after 90 days; empty dirs after 3 days"
-          },
-          {
-            "variable": "$PROJECT / $EXAPROJECT",
-            "usable_space": "5.1 PB",
-            "blocksize": "4 MB",
-            "description": "Project directory for source code, binaries, libraries",
-            "backup": "ISP (tape)",
-            "accessibility": "Login + Compute"
-          },
-          {
-            "variable": "$DATA / $EXADATA",
-            "usable_space": "21 PB",
-            "blocksize": "8 MB",
-            "description": "Large-scale data project storage",
-            "backup": "Snapshot + ISP (tape)",
-            "accessibility": "Login + Compute"
-          },
-          {
-            "variable": "$ARCHIVE / $JUSTARCHIVE",
-            "usable_space": "2.8 PB",
-            "blocksize": "2 MB",
-            "description": "Long-term archive; data migrated to tape via ISP-HSM",
-            "backup": "ISP-HSM (tape)",
-            "accessibility": "Login only"
-          }
-        ]
       }
     },
     {
@@ -523,8 +608,31 @@
           "quantity": 15,
           "unit": "PB",
           "comment": "Net capacity, NVMe"
-        }
-      },
+        },
+          "filesystems": [
+            {
+              "mount_points": ["/e/fscratch"],
+
+              "x-secret": {"mount_points": "private"},
+              "role": "scratch",
+              "usable_amount": {
+                "quantity": 15,
+                "unit": "PB"
+              },
+              "blocksize": {
+                "quantity": 8,
+                "unit": "MB"
+              },
+              "backup": "No",
+              "access": "login + compute",
+              "retention": "Files auto-deleted after 30 days; empty dirs after 3 days",
+              "comment": "Fast scratch for bandwidth and IOPS-intensive workloads",
+              "further_metadata": {
+                "variable": "$FSCRATCH / $EXAFSCRATCH"
+              }
+            }
+          ]
+        },
       "network": [
         {
           "id": "net-jupiter-storage-ib",
@@ -538,17 +646,6 @@
         }
       ],
       "further_metadata": {
-        "filesystems": [
-          {
-            "variable": "$FSCRATCH / $EXAFSCRATCH",
-            "usable_space": "15 PB",
-            "blocksize": "8 MB",
-            "description": "Fast scratch for bandwidth and IOPS-intensive workloads",
-            "backup": "No",
-            "accessibility": "Login + Compute",
-            "retention": "Files auto-deleted after 30 days; empty dirs after 3 days"
-          }
-        ]
       }
     }
   ],
