@@ -32,12 +32,74 @@ The API provides read-only endpoints to query system information:
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
-from flask import Flask, jsonify, request
+from flask import Flask, g, jsonify, request
 
 app = Flask(__name__)
 SYSTEM_DATA = None
+
+# This is a mock service: the key travels with the repository on purpose.
+# A real deployment reads it from the environment or a secret store.
+API_KEY = os.environ.get('SYSTEM_API_KEY', 'mock-api-key')
+
+
+# Markers are instructions to this service, not data: they are removed from
+# every response, so neither view advertises what is hidden.
+HELPER_KEYS = ('x-secret', 'x-secret-alternative-value')
+
+
+def render_view(node, internal):
+    """Render a description for one audience.
+
+    In the public view, a field is dropped when the object that owns it carries
+    {"x-secret": {"<field>": "private"}}. In both views the marker keys
+    themselves are dropped; the values stay untouched, so authors keep writing
+    plain numbers and paths.
+    """
+    if isinstance(node, dict):
+        secret = node.get('x-secret') or {}
+        alternatives = node.get('x-secret-alternative-value') or {}
+        hidden = set() if internal else {k for k, level in secret.items()
+                                         if level == 'private'}
+        rendered = {}
+        for key, value in node.items():
+            if key in HELPER_KEYS:
+                continue
+            if key in hidden:
+                # A private field with a publishable substitute is replaced, not
+                # dropped: "roughly 6000" answers the question that 5884 would.
+                if key in alternatives:
+                    rendered[key] = alternatives[key]
+                continue
+            rendered[key] = render_view(value, internal)
+        return rendered
+    if isinstance(node, list):
+        return [render_view(v, internal) for v in node]
+    return node
+
+
+@app.before_request
+def _authorise():
+    """An absent key means the public view; a wrong key is an error, not a
+    silent downgrade -- silence would hide a broken client."""
+    supplied = request.headers.get('X-API-Key')
+    if supplied is None:
+        g.internal = False
+    elif supplied == API_KEY:
+        g.internal = True
+    else:
+        return jsonify({'error': 'invalid API key'}), 401
+
+
+@app.after_request
+def _apply_view(response):
+    if not response.is_json:
+        return response
+    response.set_data(json.dumps(render_view(response.get_json(),
+                                             g.get('internal', False)), indent=2))
+    return response
 
 
 def load_system(path: str) -> dict:

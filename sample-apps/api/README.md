@@ -14,6 +14,48 @@ This tool creates a simple HTTP API that serves data from a JSON system descript
 - **Read-only** - Safe for sharing and testing
 - **Instant startup** - No migrations or initialization required
 
+## Two views of one description
+
+A description can mark a field private, and the API then serves two views of the
+same document:
+
+```json
+"node_count": 5884,
+"x-secret": {"node_count": "private"},
+"x-secret-alternative-value": {"node_count": 6000}
+```
+
+Without a key, the field is replaced by the value under
+`x-secret-alternative-value` --- `6000` where the internal view answers `5884`,
+which is the figure the site publishes until a machine is accepted. A private
+field without an alternative is dropped instead, which is the case for the mount
+points. With the key, both are returned as stored:
+
+```bash
+# public view: node_count and the mount points are absent
+curl http://localhost:5000/system
+
+# internal view: the full document
+curl -H "X-API-Key: mock-api-key" http://localhost:5000/system
+```
+
+The marker keys themselves never appear in a response, in either view: they are
+instructions to this service, not data, and a public view that listed them would
+advertise exactly which fields it hides.
+
+A wrong key is answered with `401` rather than silently downgraded to the public
+view. The key is read from `SYSTEM_API_KEY` and defaults to `mock-api-key`; this is
+a mock service, so the default travels with the repository — a real deployment
+would read it from the environment or a secret store.
+
+Marking works wherever a value lives: `x-secret` sits on the object that owns the
+field and names the fields it hides, so plain numbers and arrays stay plain:
+
+```json
+"mount_points": ["/e/home"],
+"x-secret": {"mount_points": "private"}
+```
+
 ## Installation
 
 Short:
